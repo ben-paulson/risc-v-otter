@@ -1,0 +1,33 @@
+#########
+#Exclude all
+#########
+*
+!*/
+!.gitignore
+#########
+#Source files:
+#########
+#Do NOT ignore VHDL, Verilog, block diagrams or EDIF files.
+!*.vhd
+!*.v
+!*.bd
+!*.edif
+!*.sv
+#########
+#Project files
+#########
+#Do NOT ignore *.xpr files
+!*.xpr
+#########
+#Constraint files
+#########
+#Do NOT ignore *.xdc files
+!*.xdc
+#########
+#Include mem files
+!*.mem
+####
+Ignore prime generator and resources
+####
+prime_number_generator
+resources
