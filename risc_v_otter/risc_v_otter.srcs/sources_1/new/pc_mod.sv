@@ -1,25 +1,9 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 09/22/2020 04:24:52 PM
-// Design Name: 
-// Module Name: pc_mod
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
-
+/*
+  The program counter (PC) module
+  with MUX for data in selection
+*/
 module pc_mod(
     input clk,
     input rst,
@@ -34,12 +18,13 @@ module pc_mod(
     parameter branch = 32'h0000_8888;
     parameter jal = 32'h0000_CCCC;
     
+    // Data input for the PC register
     wire pc_data_in;
     
     // Mux to choose whether to jump or increment address
     mux_4t1_nb  #(.n(32)) pc_source_mux  (
         .SEL   (pcSource),
-        .D0    (pc + 4), 
+        .D0    (pc_data_out + 4), 
         .D1    (jalr), 
         .D2    (branch), 
         .D3    (jal),
