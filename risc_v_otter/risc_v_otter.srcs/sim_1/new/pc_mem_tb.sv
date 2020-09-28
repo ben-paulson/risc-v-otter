@@ -30,6 +30,7 @@ module pc_mem_tb();
     
     // Simulate
     initial begin
+        // Start with incremental instructions (pcWrite = 2'b00)
         rst = 1'b1;
         #21;
         rst = 1'b0;
@@ -37,19 +38,24 @@ module pc_mem_tb();
         pcSource = 2'b00;
         #32;
         rst = 1'b0;
-        //PCWrite = 1'b0;
         #5;
         pcSource = 2'b00;
-        #70;
+        #30;
         PCWrite = 1'b0;
         #30;
-        rst = 1'b1;
-        #20;
-        rst = 1'b0;
-        #10;
-//        PCWrite = 1'b0;
-//        #35;
-//        rst = 1'b0;
+        // Now simulate the jumps. Go through pcSource with values 1-3
+        for (int i = 1; i < 4; i++) begin
+            rst = 1'b1;
+            #20;
+            rst = 1'b0;
+            #10;
+            pcSource = i;
+            #20;
+            PCWrite = 1'b1;
+            #20;
+            PCWrite = 1'b0;
+            #20;
+        end
     end
 
 endmodule

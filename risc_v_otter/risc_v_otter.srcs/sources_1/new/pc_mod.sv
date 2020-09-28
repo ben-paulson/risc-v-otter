@@ -14,7 +14,7 @@ module pc_mod(
     
     // PC source options - jal & jalr are jumps, branch is a branch.
     // Constants for now, will be changed later.
-    parameter jalr = 32'h0000_0008;//32'h0000_4444;
+    parameter jalr = 32'h0000_4444;
     parameter branch = 32'h0000_8888;
     parameter jal = 32'h0000_CCCC;
     
