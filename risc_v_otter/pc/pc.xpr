@@ -3,10 +3,10 @@
 <!--                                                         -->
 <!-- Copyright 1986-2019 Xilinx, Inc. All Rights Reserved.   -->
 
-<Project Version="7" Minor="44" Path="C:/Users/benny/Documents/CalPoly/cpe/233/risc_v_otter/risc_v_otter.xpr">
+<Project Version="7" Minor="44" Path="C:/Users/benny/Documents/CalPoly/cpe/233/risc_v_otter/pc/pc.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
-    <Option Name="Id" Val="2ecebb4a1b83498d8340d63278ee62e8"/>
+    <Option Name="Id" Val="d94a7ab04cb14d99afa8e1cc608bd7a4"/>
     <Option Name="Part" Val="xc7a35tcpg236-1"/>
     <Option Name="CompiledLibDir" Val="$PCACHEDIR/compile_simlib"/>
     <Option Name="CompiledLibDirXSim" Val=""/>
@@ -21,7 +21,6 @@
     <Option Name="ActiveSimSet" Val="sim_1"/>
     <Option Name="DefaultLib" Val="xil_defaultlib"/>
     <Option Name="ProjectType" Val="Default"/>
-    <Option Name="IPOutputRepo" Val="$PCACHEDIR/ip"/>
     <Option Name="IPCachePermission" Val="read"/>
     <Option Name="IPCachePermission" Val="write"/>
     <Option Name="EnableCoreContainer" Val="FALSE"/>
@@ -29,7 +28,7 @@
     <Option Name="IPUserFilesDir" Val="$PIPUSERFILESDIR"/>
     <Option Name="IPStaticSourceDir" Val="$PIPUSERFILESDIR/ipstatic"/>
     <Option Name="EnableBDX" Val="FALSE"/>
-    <Option Name="WTXSimLaunchSim" Val="141"/>
+    <Option Name="WTXSimLaunchSim" Val="142"/>
     <Option Name="WTModelSimLaunchSim" Val="0"/>
     <Option Name="WTQuestaLaunchSim" Val="0"/>
     <Option Name="WTIesLaunchSim" Val="0"/>
@@ -60,7 +59,7 @@
       <Filter Type="Srcs"/>
       <File Path="$PSRCDIR/sources_1/imports/modules/mux_4t1_nb_v1_03.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../resources/modules/mux_4t1_nb_v1_03.v"/>
+          <Attr Name="ImportPath" Val="$PPRDIR/../../resources/modules/mux_4t1_nb_v1_03.v"/>
           <Attr Name="ImportTime" Val="1600828094"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -69,7 +68,7 @@
       </File>
       <File Path="$PSRCDIR/sources_1/imports/modules/reg_nb_sync_clr_v1_00.v">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../resources/modules/reg_nb_sync_clr_v1_00.v"/>
+          <Attr Name="ImportPath" Val="$PPRDIR/../../resources/modules/reg_nb_sync_clr_v1_00.v"/>
           <Attr Name="ImportTime" Val="1600828572"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -78,7 +77,7 @@
       </File>
       <File Path="$PSRCDIR/sources_1/imports/modules/otter_memory_v1_06.sv">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../resources/modules/otter_memory_v1_06.sv"/>
+          <Attr Name="ImportPath" Val="$PPRDIR/../../resources/modules/otter_memory_v1_06.sv"/>
           <Attr Name="ImportTime" Val="1600813647"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -87,6 +86,8 @@
       </File>
       <File Path="$PSRCDIR/sources_1/new/pc_mod.sv">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../risc_v_otter.srcs/sources_1/new/pc_mod.sv"/>
+          <Attr Name="ImportTime" Val="1601352985"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -94,6 +95,8 @@
       </File>
       <File Path="$PSRCDIR/sources_1/new/pc_mem_top_level.sv">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../risc_v_otter.srcs/sources_1/new/pc_mem_top_level.sv"/>
+          <Attr Name="ImportTime" Val="1601156896"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -101,7 +104,7 @@
       </File>
       <File Path="$PSRCDIR/sources_1/imports/risc_v_otter/otter_memory.mem">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/otter_memory.mem"/>
+          <Attr Name="ImportPath" Val="$PPRDIR/../otter_memory.mem"/>
           <Attr Name="ImportTime" Val="1601153160"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -123,6 +126,8 @@
       <Filter Type="Srcs"/>
       <File Path="$PSRCDIR/sim_1/new/pc_mem_tb.sv">
         <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../risc_v_otter.srcs/sim_1/new/pc_mem_tb.sv"/>
+          <Attr Name="ImportTime" Val="1601257916"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
