@@ -1,5 +1,11 @@
 `timescale 1ns / 1ps
 
+/*
+  High level model of the RISC-V MCU
+  Arithmetic Logic Unit (ALU). It implements
+  the instructions below using verilog
+  mathematical operators.
+*/
 module alu(
     input [31:0] srcA,
     input [31:0] srcB,
