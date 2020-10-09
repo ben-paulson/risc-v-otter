@@ -1,5 +1,12 @@
 `timescale 1ns / 1ps
 
+/*
+  Top level implementation of PC, Memory, immed_gen,
+  and branch_addr_gen. Handles jal, jalr, and branch instructions
+  by generating a new address from an immediate value, but does
+  not load the immediate value to the PC, as this is only
+  for testing.
+*/
 module top_level(
     input clk,
     input rst,
@@ -9,11 +16,16 @@ module top_level(
     output [31:0] s_type_imm
     );
     
+    // PC out
     wire [31:0] pc_data;
+    
+    // Instruction from memory
     wire [31:0] ir;
     
+    // pcSource MUX inputs, branch_addr_gen outputs
     wire [31:0] jal, jalr, branch;
     
+    // immediate values
     wire [31:0] I_type, J_type, B_type;
     
     pc_mod pc (
