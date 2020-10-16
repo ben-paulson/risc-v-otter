@@ -54,22 +54,22 @@ module OTTER_MCU(
         );
         
     Memory OTTER_MEMORY (
-        .MEM_CLK (clk),
+        .MEM_CLK   (clk),
         .MEM_RDEN1 (memRDEN1),
         .MEM_RDEN2 (memRDEN2),
-        .MEM_WE2 (memWE2),
+        .MEM_WE2   (memWE2),
         .MEM_ADDR1 (pc_data[15:2]),
         .MEM_ADDR2 (alu_result),
-        .MEM_DIN2 (rs2),
-        .MEM_SIZE (ir[13:12]),
-        .MEM_SIGN (ir[14]),
-        .IO_IN (IOBUS_IN),
-        .IO_WR (IOBUS_WR),
+        .MEM_DIN2  (rs2),
+        .MEM_SIZE  (ir[13:12]),
+        .MEM_SIGN  (ir[14]),
+        .IO_IN     (IOBUS_IN),
+        .IO_WR     (IOBUS_WR),
         .MEM_DOUT1 (ir),
         .MEM_DOUT2 (memDOUT2)
         );
         
-     mux_4t1_nb  #(.n(32)) rf_wd_mux  (
+     mux_4t1_nb  #(.n(32)) rf_wd_mux (
         .SEL   (rf_wr_sel),
         .D0    (pc_data + 4),
         .D1    (0),  // CSR_reg
@@ -78,7 +78,7 @@ module OTTER_MCU(
         .D_OUT (rf_wd)
         );  
         
-    RegFile my_regfile (
+    RegFile regfile (
         .wd   (rf_wd),
         .clk  (clk), 
         .en   (regWrite),
@@ -109,14 +109,14 @@ module OTTER_MCU(
         .branch (branch)
         );
         
-    mux_2t1_nb  #(.n(32)) alu_a_mux  (
+    mux_2t1_nb  #(.n(32)) alu_a_mux (
         .SEL   (alu_srcA), 
         .D0    (rs1), 
         .D1    (U_type), 
         .D_OUT (srcA)
         );  
         
-    mux_4t1_nb  #(.n(32)) alu_b_mux  (
+    mux_4t1_nb  #(.n(32)) alu_b_mux (
         .SEL   (alu_srcB),
         .D0    (rs2),
         .D1    (I_type),
@@ -132,7 +132,7 @@ module OTTER_MCU(
         .result  (alu_result)
         );
         
-    CU_FSM my_fsm(
+    CU_FSM cu_fsm (
         .intr     (intr),
         .clk      (clk),
         .RST      (RST),
@@ -145,7 +145,7 @@ module OTTER_MCU(
         .reset    (reset)
         );
         
-    CU_DCDR my_cu_dcdr(
+    CU_DCDR cu_dcdr (
         .br_eq     (0), //
         .br_lt     (0), // branch inputs not used for now
         .br_ltu    (0), //
