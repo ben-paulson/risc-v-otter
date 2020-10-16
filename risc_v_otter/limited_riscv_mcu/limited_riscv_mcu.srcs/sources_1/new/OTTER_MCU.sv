@@ -14,7 +14,7 @@ module OTTER_MCU(
     wire [31:0] pc_data;
     wire reset;
     wire PCWrite;
-    wire pcSource;
+    wire [1:0] pcSource;
     
     // pcSource MUX inputs, branch_addr_gen outputs
     wire [31:0] jal, jalr, branch;
@@ -31,12 +31,12 @@ module OTTER_MCU(
     
     // wires for register file
     wire regWrite;
-    wire rf_wr_sel;
+    wire [1:0] rf_wr_sel;
     wire [31:0] rs1, rs2;
     wire [31:0] rf_wd;
     
     // wires for ALU
-    wire srcA, srcB; // mux outputs
+    wire [31:0] srcA, srcB; // mux outputs
     wire alu_srcA; // a select
     wire [1:0] alu_srcB; // b select
     wire [3:0] alu_fun;
@@ -63,8 +63,8 @@ module OTTER_MCU(
         .MEM_DIN2  (rs2),
         .MEM_SIZE  (ir[13:12]),
         .MEM_SIGN  (ir[14]),
-        .IO_IN     (IOBUS_IN),
-        .IO_WR     (IOBUS_WR),
+        .IO_IN     (iobus_in),
+        .IO_WR     (iobus_wr),
         .MEM_DOUT1 (ir),
         .MEM_DOUT2 (memDOUT2)
         );
@@ -158,5 +158,8 @@ module OTTER_MCU(
         .alu_srcB  (alu_srcB), 
         .rf_wr_sel (rf_wr_sel)
         );
+        
+    assign iobus_out = rs2;
+    assign iobus_addr = alu_result;
                 
 endmodule
