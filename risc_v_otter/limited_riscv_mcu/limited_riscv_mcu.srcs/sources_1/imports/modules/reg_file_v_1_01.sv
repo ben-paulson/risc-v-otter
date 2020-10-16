@@ -10,11 +10,25 @@
 // Target Devices: 
 // Tool Versions: 
 // Description: RIsC-V OTTER Register File Model: 32 x 32
+//
+//
+//  //- Register file instantiation template 
+//  RegFile my_regfile (
+//    .wd   (),
+//    .clk  (), 
+//    .en   (),
+//    .adr1 (),
+//    .adr2 (),
+//    .wa   (),
+//    .rs1  (), 
+//    .rs2  ()  );
+//    
 // 
 // Dependencies: 
 // 
 // Revision:
 // Revision 1.00 - File Created
+//          1.01 - (10-14-2020): added instantiation template in comments
 // Additional Comments:
 // 
 //////////////////////////////////////////////////////////////////////////////////

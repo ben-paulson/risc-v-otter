@@ -11,8 +11,8 @@
 // Tool Versions: 
 // Description: Control Unit Template/Starter File for RISC-V OTTER
 //
-//    //- instantiation template 
-//    module CU_FSM(
+//     //- instantiation template 
+//     CU_FSM my_fsm(
 //        .intr     (),
 //        .clk      (),
 //        .RST      (),
@@ -34,6 +34,7 @@
 //          1.03 - (04-24-2020) added "init" state to FSM
 //                              changed rst to reset
 //          1.04 - (04-29-2020) removed typos to allow synthesis
+//          1.05 - (10-14-2020) fixed instantiation comment (thanks AF)
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
