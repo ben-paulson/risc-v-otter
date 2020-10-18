@@ -53,7 +53,7 @@ module CU_FSM(
     
     typedef  enum logic [1:0] {
        st_INIT,
-	   st_FET,
+       st_FET,
        st_EX,
        st_WB
     }  state_type; 
@@ -71,13 +71,13 @@ module CU_FSM(
         OP_IMM = 7'b0010011,
         OP_RG3 = 7'b0110011
     } opcode_t;
-	opcode_t OPCODE;    //- symbolic names for instruction opcodes
+    opcode_t OPCODE;    //- symbolic names for instruction opcodes
      
-	assign OPCODE = opcode_t'(opcode); //- Cast input as enum 
-	 
+    assign OPCODE = opcode_t'(opcode); //- Cast input as enum 
+     
 
-	//- state registers (PS)
-	always @ (posedge clk)  
+    //- state registers (PS)
+    always @ (posedge clk)  
         if (RST == 1)
             PS <= st_INIT;
         else
@@ -87,7 +87,7 @@ module CU_FSM(
     begin              
         //- schedule all outputs to avoid latch
         pcWrite = 1'b0;    regWrite = 1'b0;    reset = 1'b0;  
-		memWE2 = 1'b0;     memRDEN1 = 1'b0;    memRDEN2 = 1'b0;
+        memWE2 = 1'b0;     memRDEN1 = 1'b0;    memRDEN2 = 1'b0;
                    
         case (PS)
 
@@ -106,57 +106,57 @@ module CU_FSM(
             st_EX: //decode + execute
             begin
                 pcWrite = 1'b1;
-				case (OPCODE)
-				    LOAD: 
-                       begin
-                          regWrite = 1'b0;
-                          memRDEN2 = 1'b1;
-                          NS = st_WB;
-                       end
+                case (OPCODE)
+                    LOAD: 
+                    begin
+                        regWrite = 1'b0;
+                        memRDEN2 = 1'b1;
+                        NS = st_WB;
+                    end
                     
-					STORE: 
-                       begin
-                          regWrite = 1'b0;
-                          memWE2 = 1'b1;
-                          NS = st_FET;
-                       end
+                    STORE: 
+                    begin
+                        regWrite = 1'b0;
+                        memWE2 = 1'b1;
+                        NS = st_FET;
+                    end
                     
-					BRANCH: 
-                       begin
-                          NS = st_FET;
-                       end
-					
-					LUI: 
-					   begin
-                          regWrite = 1'b1;					      
-					      NS = st_FET;
-					   end
-					  
-					OP_IMM:  // addi 
-					   begin 
-					      regWrite = 1'b1;	
-					      NS = st_FET;
-					   end
-					
-	                JAL: 
-					   begin
-					      regWrite = 1'b1; 
-					      NS = st_FET;
-					   end
-					 
+                    BRANCH: 
+                    begin
+                        NS = st_FET;
+                    end
+                    
+                    LUI: 
+                    begin
+                        regWrite = 1'b1;                          
+                        NS = st_FET;
+                    end
+                      
+                    OP_IMM:  // addi 
+                    begin 
+                        regWrite = 1'b1;    
+                        NS = st_FET;
+                    end
+                    
+                    JAL: 
+                    begin
+                        regWrite = 1'b1; 
+                        NS = st_FET;
+                    end
+                     
                     default:  
-					   begin 
-					      NS = st_FET;
-					   end
-					
+                    begin 
+                        NS = st_FET;
+                    end
+                    
                 endcase
             end
                
             st_WB:
             begin
-               regWrite = 1'b1; 
-               NS = st_FET;
-               memRDEN2 = 1'b1;
+                regWrite = 1'b1; 
+                NS = st_FET;
+                memRDEN2 = 1'b1;
             end
  
             default: NS = st_FET;
