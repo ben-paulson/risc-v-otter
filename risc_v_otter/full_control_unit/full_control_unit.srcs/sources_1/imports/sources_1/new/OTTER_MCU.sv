@@ -23,6 +23,11 @@ module OTTER_MCU(
     wire [31:0] I_type, J_type, B_type;
     wire [31:0] U_type, S_type;
     
+    // wires for branch_cond_gen
+    wire br_eq;
+    wire br_lt;
+    wire br_ltu;
+    
     // wires for memory module
     wire memRDEN1, memRDEN2;
     wire memWE2;
@@ -132,6 +137,14 @@ module OTTER_MCU(
         .result  (alu_result)
         );
         
+    branch_cond_gen bcg (
+        .rs1    (rs1),
+        .rs2    (rs2),
+        .br_eq  (br_eq),
+        .br_lt  (br_lt),
+        .br_ltu (br_ltu)
+        );
+        
     CU_FSM cu_fsm (
         .intr     (intr),
         .clk      (clk),
@@ -146,9 +159,9 @@ module OTTER_MCU(
         );
         
     CU_DCDR cu_dcdr (
-        .br_eq     (0), //
-        .br_lt     (0), // branch inputs not used for now
-        .br_ltu    (0), //
+        .br_eq     (br_eq),
+        .br_lt     (br_lt),
+        .br_ltu    (br_ltu),
         .opcode    (ir[6:0]),
         .func7     (ir[30]),
         .func3     (ir[14:12]),

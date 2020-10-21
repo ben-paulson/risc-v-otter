@@ -76,6 +76,13 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PSRCDIR/sources_1/new/branch_cond_gen.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PSRCDIR/sources_1/imports/sources_1/imports/233/risc_v_otter/immed_branch_addr_gen/immed_branch_addr_gen.srcs/sources_1/new/immed_gen.v">
         <FileInfo>
           <Attr Name="ImportPath" Val="$PPRDIR/../limited_riscv_mcu/limited_riscv_mcu.srcs/sources_1/imports/233/risc_v_otter/immed_branch_addr_gen/immed_branch_addr_gen.srcs/sources_1/new/immed_gen.v"/>
@@ -161,14 +168,6 @@
         <FileInfo>
           <Attr Name="ImportPath" Val="$PPRDIR/../limited_riscv_mcu/limited_riscv_mcu.srcs/sources_1/new/OTTER_MCU.sv"/>
           <Attr Name="ImportTime" Val="1602825716"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/new/branch_cond_gen.v">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
