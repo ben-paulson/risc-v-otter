@@ -74,7 +74,6 @@ module CU_FSM(
     opcode_t OPCODE;    //- symbolic names for instruction opcodes
      
     assign OPCODE = opcode_t'(opcode); //- Cast input as enum 
-     
 
     //- state registers (PS)
     always @ (posedge clk)  
@@ -107,6 +106,14 @@ module CU_FSM(
             begin
                 pcWrite = 1'b1;
                 case (OPCODE)
+                
+                    AUIPC:
+                    begin
+                        regWrite = 1'b1;
+                        memWE2 = 1'b0;
+                        NS = st_FET;
+                    end
+                    
                     LOAD: 
                     begin
                         regWrite = 1'b0;
@@ -138,9 +145,21 @@ module CU_FSM(
                         NS = st_FET;
                     end
                     
+                    OP_RG3:
+                    begin
+                        regWrite = 1'b1;
+                        NS = st_FET;
+                    end
+                    
                     JAL: 
                     begin
                         regWrite = 1'b1; 
+                        NS = st_FET;
+                    end
+                    
+                    JALR:
+                    begin
+                        regWrite = 1'b1;
                         NS = st_FET;
                     end
                      
@@ -155,8 +174,8 @@ module CU_FSM(
             st_WB:
             begin
                 regWrite = 1'b1; 
-                NS = st_FET;
                 memRDEN2 = 1'b1;
+                NS = st_FET;
             end
  
             default: NS = st_FET;

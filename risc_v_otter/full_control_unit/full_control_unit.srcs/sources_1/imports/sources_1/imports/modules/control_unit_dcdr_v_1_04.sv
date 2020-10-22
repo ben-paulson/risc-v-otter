@@ -66,7 +66,7 @@ module CU_DCDR(
     
     assign OPCODE = opcode_t'(opcode); //- Cast input enum 
 
-    //- datatype for func3Symbols tied to values
+    //- datatype for func3 (branch type)
     typedef enum logic [2:0] {
         //BRANCH labels
         BEQ = 3'b000,
@@ -75,10 +75,41 @@ module CU_DCDR(
         BGE = 3'b101,
         BLTU = 3'b110,
         BGEU = 3'b111
-    } func3_t;    
-    func3_t FUNC3; //- define variable of new opcode type
+    } func3_b_t;    
+    func3_b_t FUNC3_B; //- define variable of new opcode type
     
-    assign FUNC3 = func3_t'(func3); //- Cast input enum 
+    assign FUNC3_B = func3_b_t'(func3); //- Cast input enum 
+    
+    //- datatype for func3 (arithmetic type - for both rg3 and imm)
+    typedef enum logic [2:0] {
+        SLL = 3'b001,
+        SLT = 3'b010,
+        SLTU = 3'b011,
+        _XOR = 3'b100,
+        _OR = 3'b110,
+        _AND = 3'b111
+    } func3_ri_t;    
+    func3_ri_t FUNC3_RI; //- define variable of new opcode type
+    
+    assign FUNC3_RI = func3_ri_t'(func3); //- Cast input enum 
+    
+    // datatype for func7 (immediate type instructions)
+    typedef enum logic {
+        SRLI = 1'b0,
+        SRAI = 1'b1
+    } func7_imm_t;
+    func7_imm_t FUNC7_I; //- define variable of new opcode type
+    
+    assign FUNC7_I = func7_imm_t'(func7); // Cast input enum
+    
+    // datatype for func7 (immediate type instructions)
+    typedef enum logic {
+        ADD = 1'b0,
+        SUB = 1'b1
+    } func7_rg3_t;
+    func7_rg3_t FUNC7_R; //- define variable of new opcode type
+    
+    assign FUNC7_R = func7_rg3_t'(func7); // Cast input enum
        
     always_comb
     begin 
@@ -87,6 +118,14 @@ module CU_DCDR(
         alu_srcA = 1'b0;   alu_fun  = 4'b0000;
         
         case(OPCODE)
+            AUIPC:
+            begin
+                alu_fun = 4'b0000;
+                alu_srcA = 1'b1;
+                alu_srcB = 2'b11;
+                rf_wr_sel = 2'b11;
+                pcSource = 2'b00;
+            end
             LUI:
             begin
                 alu_fun = 4'b1001; 
@@ -100,32 +139,134 @@ module CU_DCDR(
                 pcSource = 2'b11;
             end
             
+            JALR:
+            begin
+                rf_wr_sel = 2'b00;
+                pcSource = 2'b01;
+            end
+            
+            BRANCH:
+            begin
+                case (FUNC3_B)
+                    BEQ:
+                    begin
+                        if (br_eq == 1) pcSource = 2'b10;
+                        else pcSource = 2'b00;
+                    end
+                    
+                    BNE:
+                    begin
+                        if (br_eq == 0) pcSource = 2'b10;
+                        else pcSource = 2'b00;
+                    end
+                    
+                    BLT:
+                    begin
+                        if (br_lt == 1) pcSource = 2'b10;
+                        else pcSource = 2'b00;
+                    end
+                    
+                    BGE:
+                    begin
+                        if (br_lt == 0) pcSource = 2'b10;
+                        else pcSource = 2'b00;
+                    end
+                    
+                    BLTU:
+                    begin
+                        if (br_ltu == 1) pcSource = 2'b10;
+                        else pcSource = 2'b00;
+                    end
+                    
+                    BGEU:
+                    begin
+                        if (br_ltu == 0) pcSource = 2'b10;
+                        else pcSource = 2'b00;
+                    end
+                    
+                    default: pcSource = 2'b00;
+                endcase
+            end
+            
             LOAD: 
             begin
                 alu_fun = 4'b0000;
                 alu_srcA = 1'b0; 
                 alu_srcB = 2'b01; 
                 rf_wr_sel = 2'b10; 
+                pcSource = 2'b00;
             end
             
             STORE:
             begin
                 alu_fun = 4'b0000; 
                 alu_srcA = 1'b0; 
-                alu_srcB = 2'b10; 
+                alu_srcB = 2'b10;
+                pcSource = 2'b00;
             end
             
             OP_IMM:
-            begin
-                case(FUNC3)
-                    3'b000: // instr: ADDI
+            begin // all immediate type instructions
+                alu_srcA = 1'b0;
+                alu_srcB = 2'b01;
+                rf_wr_sel = 2'b11;
+                pcSource = 2'b00;
+                case(FUNC3_RI)
+                    3'b000: alu_fun = 4'b0000; // add
+                    SLL:    alu_fun = 4'b0001; // slli
+                    SLT:    alu_fun = 4'b0010; // slti
+                    SLTU:   alu_fun = 4'b0011; // sltiu
+                    _XOR:   alu_fun = 4'b0100; // xori
+                    3'b101:
+                    begin // same FUNC3, differ by FUNC7 only
+                        case (FUNC7_I)
+                            SRLI: alu_fun = 4'b0101; // srli
+                            SRAI: alu_fun = 4'b1101; // srai
+                            default: alu_fun = 4'b0000;
+                        endcase
+                    end
+                    _OR:    alu_fun = 4'b0110; // ori
+                    _AND:   alu_fun = 4'b0111; // andi                    
+                    default: 
                     begin
+                        pcSource = 2'b00; 
                         alu_fun = 4'b0000;
                         alu_srcA = 1'b0; 
-                        alu_srcB = 2'b01;
-                        rf_wr_sel = 2'b11; 
+                        alu_srcB = 2'b00; 
+                        rf_wr_sel = 2'b00; 
                     end
-                    
+                endcase
+            end
+            
+            OP_RG3:
+            begin
+                alu_srcA = 1'b0;
+                alu_srcB = 2'b00;
+                rf_wr_sel = 2'b11;
+                pcSource = 2'b00;
+                case(FUNC3_RI)
+                    3'b000: 
+                    begin // same FUNC3, differ by FUNC7 only
+                        case (FUNC7_R)
+                            ADD: alu_fun = 4'b0000; // add
+                            SUB: alu_fun = 4'b1000; // sub
+                            default: alu_fun = 4'b0000;
+                        endcase
+                    end
+                    SLL:    alu_fun = 4'b0001; // sll
+                    SLT:    alu_fun = 4'b0010; // slt
+                    SLTU:   alu_fun = 4'b0011; // sltu
+                    _XOR:   alu_fun = 4'b0100; // xor
+                    3'b101:
+                    begin // same FUNC3, differ by FUNC7 only
+                        case (FUNC7_I)
+                            SRLI: alu_fun = 4'b0101; // srl
+                            SRAI: alu_fun = 4'b1101; // sra
+                            default: alu_fun = 4'b0000;
+                        endcase
+                    end
+                    _OR:    alu_fun = 4'b0110; // or
+                    _AND:   alu_fun = 4'b0111; // and                    
                     default: 
                     begin
                         pcSource = 2'b00; 
