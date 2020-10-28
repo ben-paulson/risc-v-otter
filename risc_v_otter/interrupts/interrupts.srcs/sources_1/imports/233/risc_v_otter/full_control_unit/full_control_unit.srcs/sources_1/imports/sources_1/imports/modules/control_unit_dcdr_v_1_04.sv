@@ -44,6 +44,7 @@ module CU_DCDR(
     input [6:0] opcode,   //-  ir[6:0]
     input func7,          //-  ir[30]
     input [2:0] func3,    //-  ir[14:12] 
+    input int_taken,
     output logic [3:0] alu_fun,
     output logic [2:0] pcSource,
     output logic alu_srcA,
@@ -60,7 +61,8 @@ module CU_DCDR(
         LOAD   = 7'b0000011,
         STORE  = 7'b0100011,
         OP_IMM = 7'b0010011,
-        OP_RG3 = 7'b0110011
+        OP_RG3 = 7'b0110011,
+        SYS    = 7'b1110011
     } opcode_t;
     opcode_t OPCODE; //- define variable of new opcode type
     
@@ -117,6 +119,9 @@ module CU_DCDR(
         pcSource = 3'b000;  alu_srcB = 2'b00;    rf_wr_sel = 2'b00; 
         alu_srcA = 1'b0;   alu_fun  = 4'b0000;
         
+        // Load mtvec to PC if interrupt is taken
+        if (int_taken == 1) pcSource = 3'b100;
+        
         case(OPCODE)
             AUIPC:
             begin
@@ -131,6 +136,20 @@ module CU_DCDR(
                 alu_fun = 4'b1001; 
                 alu_srcA = 1'b1; 
                 rf_wr_sel = 2'b11; 
+            end
+            
+            SYS:
+            begin
+                case (func3)
+                    3'b001: // csrrw
+                    begin
+                        rf_wr_sel = 2'b01;
+                    end
+                    3'b000: // mret
+                    begin
+                        pcSource = 3'b101;
+                    end
+                endcase
             end
             
             JAL:

@@ -178,6 +178,7 @@ module OTTER_MCU(
         .opcode    (ir[6:0]),
         .func7     (ir[30]),
         .func3     (ir[14:12]),
+        .int_taken (int_taken),
         .alu_fun   (alu_fun),
         .pcSource  (pcSource),
         .alu_srcA  (alu_srcA),

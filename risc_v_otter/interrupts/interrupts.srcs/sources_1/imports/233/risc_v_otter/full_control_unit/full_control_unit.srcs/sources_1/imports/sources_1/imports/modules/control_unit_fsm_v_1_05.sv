@@ -54,11 +54,12 @@ module CU_FSM(
     output logic int_taken
   );
     
-    typedef  enum logic [1:0] {
+    typedef  enum logic [2:0] {
        st_INIT,
        st_FET,
        st_EX,
-       st_WB
+       st_WB,
+       st_INTR
     }  state_type; 
     state_type  NS,PS; 
       
@@ -72,7 +73,8 @@ module CU_FSM(
         LOAD   = 7'b0000011,
         STORE  = 7'b0100011,
         OP_IMM = 7'b0010011,
-        OP_RG3 = 7'b0110011
+        OP_RG3 = 7'b0110011,
+        SYS    = 7'b1110011
     } opcode_t;
     opcode_t OPCODE;    //- symbolic names for instruction opcodes
      
@@ -114,7 +116,8 @@ module CU_FSM(
                     begin
                         regWrite = 1'b1;
                         memWE2 = 1'b0;
-                        NS = st_FET;
+                        if (intr == 1) NS = st_INTR;
+                        else NS = st_FET;
                     end
                     
                     LOAD: 
@@ -128,42 +131,73 @@ module CU_FSM(
                     begin
                         regWrite = 1'b0;
                         memWE2 = 1'b1;
-                        NS = st_FET;
+                        if (intr == 1) NS = st_INTR;
+                        else NS = st_FET;
                     end
                     
                     BRANCH: 
                     begin
-                        NS = st_FET;
+                        if (intr == 1) NS = st_INTR;
+                        else NS = st_FET;
                     end
                     
                     LUI: 
                     begin
                         regWrite = 1'b1;                          
-                        NS = st_FET;
+                        if (intr == 1) NS = st_INTR;
+                        else NS = st_FET;
                     end
                       
                     OP_IMM:  // addi 
                     begin 
                         regWrite = 1'b1;    
-                        NS = st_FET;
+                        if (intr == 1) NS = st_INTR;
+                        else NS = st_FET;
                     end
                     
                     OP_RG3:
                     begin
                         regWrite = 1'b1;
-                        NS = st_FET;
+                        if (intr == 1) NS = st_INTR;
+                        else NS = st_FET;
                     end
                     
                     JAL: 
                     begin
                         regWrite = 1'b1; 
-                        NS = st_FET;
+                        if (intr == 1) NS = st_INTR;
+                        else NS = st_FET;
                     end
                     
                     JALR:
                     begin
                         regWrite = 1'b1;
-                        NS = st_FET;
+                        if (intr == 1) NS = st_INTR;
+                        else NS = st_FET;
+                    end
+                    
+                    SYS:
+                    begin
+                        case (func3)
+                            3'b001: // csrrw
+                            begin
+                                csr_WE = 1'b1;
+                                regWrite = 1'b1;
+                            end
+                            3'b000: // mret
+                            begin
+                                csr_WE = 1'b0;
+                                regWrite = 1'b0;
+                            end
+                            default: 
+                            begin
+                                csr_WE = 1'b0;
+                                regWrite = 1'b0;
+                            end
+                        endcase
+                        
+                        if (intr == 1) NS = st_INTR;
+                        else NS = st_FET;
                     end
                      
                     default:  
@@ -178,6 +212,13 @@ module CU_FSM(
             begin
                 regWrite = 1'b1; 
                 memRDEN2 = 1'b1;
+                if (intr == 1) NS = st_INTR;
+                else NS = st_FET;
+            end
+            
+            st_INTR:
+            begin
+                int_taken = 1'b1;
                 NS = st_FET;
             end
  
