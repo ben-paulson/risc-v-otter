@@ -53,6 +53,7 @@ module OTTER_MCU(
     wire [31:0] csr_rd;
     wire int_taken;
     wire csr_WE;
+    wire mie;
     
     pc_mod pc (
         .clk      (clk),
@@ -86,7 +87,7 @@ module OTTER_MCU(
      mux_4t1_nb  #(.n(32)) rf_wd_mux (
         .SEL   (rf_wr_sel),
         .D0    (pc_data + 4),
-        .D1    (0),  // CSR_reg
+        .D1    (csr_rd),
         .D2    (memDOUT2), 
         .D3    (alu_result),
         .D_OUT (rf_wd)
@@ -155,16 +156,19 @@ module OTTER_MCU(
         );
         
     CU_FSM cu_fsm (
-        .intr     (intr),
-        .clk      (clk),
-        .RST      (RST),
-        .opcode   (ir[6:0]),
-        .pcWrite  (PCWrite),
-        .regWrite (regWrite),
-        .memWE2   (memWE2),
-        .memRDEN1 (memRDEN1),
-        .memRDEN2 (memRDEN2),
-        .reset    (reset)
+        .intr      (intr & mie),
+        .clk       (clk),
+        .RST       (RST),
+        .opcode    (ir[6:0]),
+        .func3     (ir[14:12]),
+        .pcWrite   (PCWrite),
+        .regWrite  (regWrite),
+        .memWE2    (memWE2),
+        .memRDEN1  (memRDEN1),
+        .memRDEN2  (memRDEN2),
+        .reset     (reset),
+        .csr_WE    (csr_WE),
+        .int_taken (int_taken)
         );
         
     CU_DCDR cu_dcdr (
@@ -180,6 +184,20 @@ module OTTER_MCU(
         .alu_srcB  (alu_srcB), 
         .rf_wr_sel (rf_wr_sel)
         );
+        
+    CSR my_csr (
+        .CLK       (clk),
+        .RST       (reset),
+        .INT_TAKEN (int_taken),
+        .ADDR      (ir[31:20]),
+        .PC        (pc_data),
+        .WD        (rs1),
+        .WR_EN     (csr_WE), 
+        .RD        (csr_rd),
+        .CSR_MEPC  (mepc),  
+        .CSR_MTVEC (mtvec), 
+        .CSR_MIE   (mie)    
+        ); 
         
     assign iobus_out = rs2;
     assign iobus_addr = alu_result;

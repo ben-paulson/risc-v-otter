@@ -43,12 +43,15 @@ module CU_FSM(
     input clk,
     input RST,
     input [6:0] opcode,     // ir[6:0]
+    input [2:0] func3,      // ir[14:12]
     output logic pcWrite,
     output logic regWrite,
     output logic memWE2,
     output logic memRDEN1,
     output logic memRDEN2,
-    output logic reset
+    output logic reset,
+    output logic csr_WE,
+    output logic int_taken
   );
     
     typedef  enum logic [1:0] {
