@@ -92,7 +92,8 @@ module CU_FSM(
         //- schedule all outputs to avoid latch
         pcWrite = 1'b0;    regWrite = 1'b0;    reset = 1'b0;  
         memWE2 = 1'b0;     memRDEN1 = 1'b0;    memRDEN2 = 1'b0;
-                   
+        int_taken = 1'b0;
+        
         case (PS)
 
             st_INIT: //waiting state  
@@ -219,6 +220,7 @@ module CU_FSM(
             st_INTR:
             begin
                 int_taken = 1'b1;
+                pcWrite = 1'b1;
                 NS = st_FET;
             end
  

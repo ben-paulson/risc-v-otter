@@ -119,9 +119,6 @@ module CU_DCDR(
         pcSource = 3'b000;  alu_srcB = 2'b00;    rf_wr_sel = 2'b00; 
         alu_srcA = 1'b0;   alu_fun  = 4'b0000;
         
-        // Load mtvec to PC if interrupt is taken
-        if (int_taken == 1) pcSource = 3'b100;
-        
         case(OPCODE)
             AUIPC:
             begin
@@ -306,6 +303,10 @@ module CU_DCDR(
                  alu_fun = 4'b0000;
             end
             endcase
+            
+        // Load mtvec to PC if interrupt is taken
+        if (int_taken == 1) pcSource = 3'b100;
+        
     end
 
 endmodule
