@@ -138,14 +138,8 @@ module CU_DCDR(
             SYS:
             begin
                 case (func3)
-                    3'b001: // csrrw
-                    begin
-                        rf_wr_sel = 2'b01;
-                    end
-                    3'b000: // mret
-                    begin
-                        pcSource = 3'b101;
-                    end
+                    3'b001: rf_wr_sel = 2'b01; // csrrw
+                    3'b000: pcSource = 3'b101; // mret
                 endcase
             end
             
