@@ -92,7 +92,7 @@ module CU_FSM(
         //- schedule all outputs to avoid latch
         pcWrite = 1'b0;    regWrite = 1'b0;    reset = 1'b0;  
         memWE2 = 1'b0;     memRDEN1 = 1'b0;    memRDEN2 = 1'b0;
-        int_taken = 1'b0;
+        int_taken = 1'b0;  csr_WE = 1'b0;
         
         case (PS)
 
