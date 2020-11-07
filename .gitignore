@@ -28,6 +28,9 @@
 #Include mem files
 !*.mem
 ####
+# Include assembly files
+!*.s
+####
 Ignore prime generator and resources
 ####
 prime_number_generator
