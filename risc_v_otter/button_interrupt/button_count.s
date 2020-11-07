@@ -25,8 +25,8 @@ init:       li          x15, 0x1100C004         # segments port addr
             li          x26, 3                  # 1s digit
             li          x27, 0                  # Current anode (0 -> 4: L -> R)
             li          x28, 0xF                # All anodes off
-            li          x20, x20, 2             # 10s digit anode
-            li          x21, x21, 3             # 1s digit anode
+            li          x20, 2                  # 10s digit anode
+            li          x21, 3                  # 1s digit anode
 
 loop:       sb          x28, 0(x16)             # Turn off all anodes
             beq         x27, x20, do_10s        # If currently on 10s digit
