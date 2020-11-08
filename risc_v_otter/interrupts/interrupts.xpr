@@ -29,7 +29,7 @@
     <Option Name="IPUserFilesDir" Val="$PIPUSERFILESDIR"/>
     <Option Name="IPStaticSourceDir" Val="$PIPUSERFILESDIR/ipstatic"/>
     <Option Name="EnableBDX" Val="FALSE"/>
-    <Option Name="WTXSimLaunchSim" Val="35"/>
+    <Option Name="WTXSimLaunchSim" Val="47"/>
     <Option Name="WTModelSimLaunchSim" Val="0"/>
     <Option Name="WTQuestaLaunchSim" Val="0"/>
     <Option Name="WTIesLaunchSim" Val="0"/>
@@ -131,6 +131,15 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PSRCDIR/sources_1/imports/233/risc_v_otter/full_control_unit/full_control_unit.srcs/sources_1/imports/sources_1/new/OTTER_MCU.sv">
+        <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../full_control_unit/full_control_unit.srcs/sources_1/imports/sources_1/new/OTTER_MCU.sv"/>
+          <Attr Name="ImportTime" Val="1603252808"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PSRCDIR/sources_1/imports/233/risc_v_otter/full_control_unit/full_control_unit.srcs/sources_1/imports/sources_1/imports/modules/control_unit_dcdr_v_1_04.sv">
         <FileInfo>
           <Attr Name="ImportPath" Val="$PPRDIR/../full_control_unit/full_control_unit.srcs/sources_1/imports/sources_1/imports/modules/control_unit_dcdr_v_1_04.sv"/>
@@ -174,10 +183,10 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/imports/233/risc_v_otter/full_control_unit/full_control_unit.srcs/sources_1/imports/sources_1/new/OTTER_MCU.sv">
+      <File Path="$PSRCDIR/sources_1/imports/otter/OTTER_Wrapper_v1_05.sv">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../full_control_unit/full_control_unit.srcs/sources_1/imports/sources_1/new/OTTER_MCU.sv"/>
-          <Attr Name="ImportTime" Val="1603252808"/>
+          <Attr Name="ImportPath" Val="$PPRDIR/../../resources/modules/otter/OTTER_Wrapper_v1_05.sv"/>
+          <Attr Name="ImportTime" Val="1602563237"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -193,12 +202,20 @@
       </File>
       <Config>
         <Option Name="DesignMode" Val="RTL"/>
-        <Option Name="TopModule" Val="OTTER_MCU"/>
+        <Option Name="TopModule" Val="OTTER_Wrapper"/>
         <Option Name="TopAutoSet" Val="TRUE"/>
       </Config>
     </FileSet>
     <FileSet Name="constrs_1" Type="Constrs" RelSrcDir="$PSRCDIR/constrs_1">
       <Filter Type="Constrs"/>
+      <File Path="$PSRCDIR/constrs_1/imports/modules/Basys3_RISCV_simple.xdc">
+        <FileInfo>
+          <Attr Name="ImportPath" Val="$PPRDIR/../../resources/modules/Basys3_RISCV_simple.xdc"/>
+          <Attr Name="ImportTime" Val="1602563238"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+        </FileInfo>
+      </File>
       <Config>
         <Option Name="ConstrsType" Val="XDC"/>
       </Config>
@@ -255,16 +272,17 @@
     </Simulator>
   </Simulators>
   <Runs Version="1" Minor="11">
-    <Run Id="synth_1" Type="Ft3:Synth" SrcSet="sources_1" Part="xc7a35tcpg236-1" ConstrsSet="constrs_1" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" State="current" IncludeInArchive="true">
+    <Run Id="synth_1" Type="Ft3:Synth" SrcSet="sources_1" Part="xc7a35tcpg236-1" ConstrsSet="constrs_1" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" State="current" Dir="$PRUNDIR/synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2019"/>
         <Step Id="synth_design"/>
       </Strategy>
+      <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
       <ReportStrategy Name="Vivado Synthesis Default Reports" Flow="Vivado Synthesis 2019"/>
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
       <RQSFiles/>
     </Run>
-    <Run Id="impl_1" Type="Ft2:EntireDesign" Part="xc7a35tcpg236-1" ConstrsSet="constrs_1" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" State="current" SynthRun="synth_1" IncludeInArchive="true" GenFullBitstream="true">
+    <Run Id="impl_1" Type="Ft2:EntireDesign" Part="xc7a35tcpg236-1" ConstrsSet="constrs_1" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" State="current" Dir="$PRUNDIR/impl_1" SynthRun="synth_1" IncludeInArchive="true" GenFullBitstream="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2019"/>
         <Step Id="init_design"/>
@@ -277,6 +295,7 @@
         <Step Id="post_route_phys_opt_design"/>
         <Step Id="write_bitstream"/>
       </Strategy>
+      <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
       <ReportStrategy Name="Vivado Implementation Default Reports" Flow="Vivado Implementation 2019"/>
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
       <RQSFiles/>

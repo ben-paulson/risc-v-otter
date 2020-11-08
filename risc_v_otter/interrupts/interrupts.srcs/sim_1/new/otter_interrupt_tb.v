@@ -30,6 +30,7 @@ module otter_interrupt_tb();
     begin
         RST = 1;
         intr = 0;
+        iobus_in = 32'h00000000;
         #40;
         RST = 0;
         #766;
