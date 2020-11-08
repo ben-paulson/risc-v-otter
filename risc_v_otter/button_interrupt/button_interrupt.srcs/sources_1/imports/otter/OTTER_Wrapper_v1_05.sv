@@ -60,7 +60,7 @@ module OTTER_Wrapper(
    assign s_sig_in = buttons[2]; // left most button
    assign s_reset = buttons[3];
    
-   DBounce #(.n(5)) dbounce(
+   DBounce #(.n(15)) dbounce(
       .clk    (s_clk),
       .sig_in (s_sig_in),
       .DB_out (s_db_out)   
@@ -96,7 +96,7 @@ module OTTER_Wrapper(
              LEDS_PORT_ADDR:   r_leds <= IOBUS_out[15:0];    
              SEGS_PORT_ADDR:   r_segs <= IOBUS_out[7:0];
              ANODES_PORT_ADDR: r_an  <= IOBUS_out[3:0];
-             default:  	r_leds <= 0; 
+             default:  	r_leds <= 0;
           endcase
        end
     end
