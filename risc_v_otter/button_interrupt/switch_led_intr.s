@@ -16,7 +16,7 @@ init:       li          x10, 0x1100C000     # LEDS address
             csrrw       x0, mtvec, x6       # Load ISR address to mtvec
             li          x8, 0               # Interrupt flag
             li          x9, 1               # Interrupt enable
-            csrrw       x0, mie, x9         # Enable interrupts
+int_en:     csrrw       x0, mie, x9         # Enable interrupts
             
 loop:       beqz        x8, loop            # Interrupt flag not set
 
@@ -33,10 +33,12 @@ intr_done:  mv          x16, x15            # Most recent is now previous
             j           loop                # Wait for another interrupt
             
 
-pause:      lw          x18, 0(x12)         # Load buttons value
+pause:      mv          x8, x0              # Clear interrupt flag (so we don't enter
+                                            # interrupt code after "unpausing")
+p_loop:     lw          x18, 0(x12)         # Load buttons value
             andi        x18, x18, 1         # Only care about LSB
-            beq         x18, x9, loop       # If button[0] was pressed (x9 will be 1)
-            j           pause               # Otherwise keep checking
+            beq         x18, x9, int_en     # If button[0] was pressed (x9 will be 1)
+            j           p_loop              # Otherwise keep checking
 
 ISR:        li          x8, 1               # Set interrupt flag
             mret                            # Return from ISR
