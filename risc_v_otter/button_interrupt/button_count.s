@@ -27,7 +27,7 @@ init:       call        load_lut                # Load values into LUT
             la          x29, an                 # LUT anodes base address
             la          x30, seg                # LUT segments base address
             li          x25, 0                  # 10s digit
-            li          x26, 3                  # 1s digit
+            li          x26, 0                  # 1s digit
             li          x27, 3                  # Current anode (3 -> 0: L -> R)
             li          x28, 0xF                # All anodes off
             li          x20, 1                  # 10s digit anode
