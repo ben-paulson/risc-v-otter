@@ -23,10 +23,11 @@ init:       call        load_lut                # Load values into LUT
             li          x16, 0x1100C008         # anodes port addr
             li          x17, 0x1100D000         # TC CSR port addr
             li          x18, 0x1100D004         # TC count port addr
+            li          x19, 0x11008004         # Buttons port addr
             li          sp, 0x0000A000          # init stack pointer
             la          x6, ISR                 # Load ISR addr 
             csrrw       x0, mtvec, x6           # Put ISR addr in mtvec
-            li          x20, 0x00061A80         # Each segment on for 4 ms
+            li          x20, 0x00000144         # FF + avg clock cycles of ISR
             sw          x20, 0(x18)             # Store as timer count
             li          x20, 0x01               # TC CSR value
             sw          x20, 0(x17)             # No prescale, enable TC
@@ -37,10 +38,42 @@ init:       call        load_lut                # Load values into LUT
             li          x27, 3                  # Current anode (3 -> 0: L -> R)
             li          x28, 0xF                # All anodes off
             li          x20, 1                  # 10s digit anode
+            mv          x7, x0                  # Most recent button value
+            mv          x8, x0                  # Previous button value
+            mv          x9, x0                  # Last debounced state
+            mv          x11, x0                 # Current debounced state
+            li          x13, 5                  # Number of loop cycles the button 
+                                                # value should be consistent before
+                                                # it is "debounced"
             csrrw       x0, mie, x20            # Enable interrupts
 
-loop:       j           loop                    # For now, to test display multiplexing
+loop:       call        debounce                # Get current debounced output
+            beq         x11, x9, loop           # Current same as previous db'd value
+chk_prev:   bnez        x9, loop                # Prev db'd value was pressed
+            call        btn_cnt                 # Count button press
+            j           loop                    # Check button again
             
+#------------------------------------------------------------
+# Subroutine: debounce
+#
+# Debounces the buttons (only the LSB) by ensuring the value
+# of the button is consistent for a certain amount of time.
+# Returns the debounced output in x11
+#------------------------------------------------------------
+debounce:
+init:       mv          x12, x13                # Number of cycles before debounced
+db_loop:    beqz        x12, upd_out            # Debounced if output consistent x12 times thru
+            lw          x7, 0(x19)              # Current button value
+            andi        x7, x7, 1               # Only need LSB of buttons
+            beq         x7, x8, equal           # If current is same as previous
+            addi        x12, x13, 1             # Reset w/ 1 greater than original loop cycles
+            addi        x12, x12, -1            # Decrement counter
+            mv          x8, x7                  # Store button value as previous value
+            j           db_loop                 # Next check
+
+upd_out:    mv          x11, x8                 # Output previous value (same as current)
+            ret                                 # Done
+
 #------------------------------------------------------------
 # ISR
 #
@@ -52,6 +85,7 @@ ISR:
             call        choose_seg              # Choose correct value to display
             call        update_seg              # Update the current segment
             call        update_an               # Enable the currrent anode
+            csrrw       x0, mie, x20            # Enable interrupts again
             mret                                # Done with ISR
 
 #------------------------------------------------------------

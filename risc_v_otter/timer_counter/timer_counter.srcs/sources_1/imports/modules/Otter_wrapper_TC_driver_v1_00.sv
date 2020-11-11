@@ -98,7 +98,7 @@ module OTTER_Wrapper(
        if (IOBUS_wr == 1)
        begin
           case(IOBUS_addr)
-             LEDS_PORT_ADDR:       r_leds <= IOBUS_out[15:0];    
+             LEDS_PORT_ADDR:       r_leds <= IOBUS_out[15:0]; 
              SEGS_PORT_ADDR:       r_segs <= IOBUS_out[7:0];
              ANODES_PORT_ADDR:     r_an  <= IOBUS_out[3:0];
              TMR_CNTR_CSR_ADDR:    r_tc_csr  <= IOBUS_out[7:0];
