@@ -42,15 +42,16 @@ init:       call        load_lut                # Load values into LUT
             mv          x8, x0                  # Previous button value
             mv          x9, x0                  # Last debounced state
             mv          x11, x0                 # Current debounced state
-            li          x13, 5                  # Number of loop cycles the button 
+            li          x13, 0x3E8              # Number of loop cycles the button 
                                                 # value should be consistent before
                                                 # it is "debounced"
             csrrw       x0, mie, x20            # Enable interrupts
 
-loop:       call        debounce                # Get current debounced output
+loop:       mv          x9, x11                 # Move current db'd state to prev db'd state
+            call        debounce                # Get current debounced output
             beq         x11, x9, loop           # Current same as previous db'd value
 chk_prev:   bnez        x9, loop                # Prev db'd value was pressed
-            call        btn_cnt                 # Count button press
+            call        btn_count               # Count button press
             j           loop                    # Check button again
             
 #------------------------------------------------------------
@@ -61,13 +62,13 @@ chk_prev:   bnez        x9, loop                # Prev db'd value was pressed
 # Returns the debounced output in x11
 #------------------------------------------------------------
 debounce:
-init:       mv          x12, x13                # Number of cycles before debounced
+db_init:    mv          x12, x13                # Number of cycles before debounced
 db_loop:    beqz        x12, upd_out            # Debounced if output consistent x12 times thru
             lw          x7, 0(x19)              # Current button value
             andi        x7, x7, 1               # Only need LSB of buttons
-            beq         x7, x8, equal           # If current is same as previous
+            beq         x7, x8, db_eq           # If current is same as previous
             addi        x12, x13, 1             # Reset w/ 1 greater than original loop cycles
-            addi        x12, x12, -1            # Decrement counter
+db_eq:      addi        x12, x12, -1            # Decrement counter
             mv          x8, x7                  # Store button value as previous value
             j           db_loop                 # Next check
 
@@ -82,9 +83,13 @@ upd_out:    mv          x11, x8                 # Output previous value (same as
 #------------------------------------------------------------
 ISR:
             sw          x28, 0(x16)             # Turn off all anodes
+            addi        sp, sp, -4              # Adjust sp
+            sw          ra, 0(sp)               # Push return address
             call        choose_seg              # Choose correct value to display
             call        update_seg              # Update the current segment
             call        update_an               # Enable the currrent anode
+            lw          ra, 0(sp)               # Pop return address
+            addi        sp, sp, 4               # Restore sp
             csrrw       x0, mie, x20            # Enable interrupts again
             mret                                # Done with ISR
 
@@ -104,7 +109,6 @@ btn_count:
             bltu         x25, x20, cnt_done     # If 10s digit goes to 5
             mv           x25, x0                # Clear 10s digit
 cnt_done:   li           x20, 1                 # Restore x20
-            csrrw        x0, mie, x20           # Enable interrupts
             ret                                 # Done
 
 
@@ -172,7 +176,7 @@ c_done:     ret                                 # Done
 # tweaked registers: x31
 #------------------------------------------------------------
 delay_ff:
-            li          x31,0xFF                # load count
+            li          x31,0xFFFFF                # load count
 d_loop:     beq         x31,x0,d_done           # leave if done
             addi        x31,x31,-1              # decrement count
             j           d_loop                  # rinse, repeat
