@@ -27,7 +27,7 @@ init:       call        load_lut                # Load values into LUT
             li          sp, 0x0000A000          # init stack pointer
             la          x6, ISR                 # Load ISR addr 
             csrrw       x0, mtvec, x6           # Put ISR addr in mtvec
-            li          x20, 0x00000144         # FF + avg clock cycles of ISR
+            li          x20, 0x0000014E         # FF + avg clock cycles of ISR
             sw          x20, 0(x18)             # Store as timer count
             li          x20, 0x01               # TC CSR value
             sw          x20, 0(x17)             # No prescale, enable TC
@@ -166,22 +166,6 @@ do_10s:     beqz        x25, c_done             # lead-zero blanking on 10s digi
             j           c_done                  # Update segment
 do_1s:      mv          x10, x26                # Update segments to value in 1s digit
 c_done:     ret                                 # Done
-
-#------------------------------------------------------------
-# Subroutine: delay_ff
-#
-# Delays for a count of FF. Unknown how long that is but it
-# is plenty of time for display multiplexing
-#
-# tweaked registers: x31
-#------------------------------------------------------------
-delay_ff:
-            li          x31,0xFFFFF                # load count
-d_loop:     beq         x31,x0,d_done           # leave if done
-            addi        x31,x31,-1              # decrement count
-            j           d_loop                  # rinse, repeat
-d_done:     ret                                 # leave it all behind
-#--------------------------------------------------------------
 
 #--------------------------------------------------------------
 # Subroutine: load_lut
