@@ -27,6 +27,9 @@ chk_1:          mv          x18, x15                # x15 current largest
 chk_2:          bgt         x18, x17, done          # x18 > x17
                 mv          x18, x17                # x18 holds largest
 done:           sw          x18, 0(x10)             # Store largest output to LEDs
+                mv          x17, x16                # Move 2nd to 3rd
+                mv          x16, x15                # Move 1st to 2nd
+                mv          x8, x0                  # Clear interrupt flag
                 csrrw       x0, mie, x9             # Enable interrupts
                 j           loop                    # Wait for another interrupt
 
