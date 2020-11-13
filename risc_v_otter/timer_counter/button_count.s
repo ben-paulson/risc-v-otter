@@ -45,7 +45,8 @@ init:       call        load_lut                # Load values into LUT
             li          x13, 0x3E8              # Number of loop cycles the button 
                                                 # value should be consistent before
                                                 # it is "debounced"
-            csrrw       x0, mie, x20            # Enable interrupts
+            li          x5, 1                   # Keep a 1 in x5
+            csrrw       x0, mie, x5             # Enable interrupts
 
 loop:       mv          x9, x11                 # Move current db'd state to prev db'd state
             call        debounce                # Get current debounced output
@@ -85,12 +86,15 @@ ISR:
             sw          x28, 0(x16)             # Turn off all anodes
             addi        sp, sp, -4              # Adjust sp
             sw          ra, 0(sp)               # Push return address
+#            sw          x20, 4(sp)              # Push x20
+#            li          x20, 1                  # Make sure x20 is 1
             call        choose_seg              # Choose correct value to display
             call        update_seg              # Update the current segment
             call        update_an               # Enable the currrent anode
+            csrrw       x0, mie, x5             # Enable interrupts
+#            lw          x20, 4(sp)              # Pop x20
             lw          ra, 0(sp)               # Pop return address
             addi        sp, sp, 4               # Restore sp
-            csrrw       x0, mie, x20            # Enable interrupts again
             mret                                # Done with ISR
 
 #------------------------------------------------------------
@@ -157,6 +161,9 @@ update_seg:
 # while rightmost are the 10s digit and 1s digit.
 #------------------------------------------------------------
 choose_seg:
+            addi        sp, sp, -4              # Adjust sp
+            sw          x20, 0(sp)              # Push x20
+            li          x20, 1                  # 1 is the 10s digit anode
             beq         x27, x20, do_10s        # If currently on 10s digit
             beq         x27, x0, do_1s          # If currently on 1s digit
             li          x10, 0xA                # All segments off otherwise
@@ -165,7 +172,9 @@ do_10s:     beqz        x25, c_done             # lead-zero blanking on 10s digi
             mv          x10, x25                # Update segments to value in 10s digit
             j           c_done                  # Update segment
 do_1s:      mv          x10, x26                # Update segments to value in 1s digit
-c_done:     ret                                 # Done
+c_done:     lw          x20, 0(sp)              # Pop x20
+            addi        sp, sp, 4               # Restore sp
+            ret                                 # Done
 
 #--------------------------------------------------------------
 # Subroutine: load_lut
