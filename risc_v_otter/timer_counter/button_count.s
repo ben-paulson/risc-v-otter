@@ -27,7 +27,7 @@ init:       call        load_lut                # Load values into LUT
             li          sp, 0x0000A000          # init stack pointer
             la          x6, ISR                 # Load ISR addr 
             csrrw       x0, mtvec, x6           # Put ISR addr in mtvec
-            li          x20, 0x0000014E         # FF + avg clock cycles of ISR
+            li          x20, 0x00000159         # FF + avg clock cycles of ISR
             sw          x20, 0(x18)             # Store as timer count
             li          x20, 0x01               # TC CSR value
             sw          x20, 0(x17)             # No prescale, enable TC
@@ -86,13 +86,10 @@ ISR:
             sw          x28, 0(x16)             # Turn off all anodes
             addi        sp, sp, -4              # Adjust sp
             sw          ra, 0(sp)               # Push return address
-#            sw          x20, 4(sp)              # Push x20
-#            li          x20, 1                  # Make sure x20 is 1
             call        choose_seg              # Choose correct value to display
             call        update_seg              # Update the current segment
             call        update_an               # Enable the currrent anode
             csrrw       x0, mie, x5             # Enable interrupts
-#            lw          x20, 4(sp)              # Pop x20
             lw          ra, 0(sp)               # Pop return address
             addi        sp, sp, 4               # Restore sp
             mret                                # Done with ISR
