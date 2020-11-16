@@ -1,8 +1,9 @@
 #------------------------------------------
-# Counts the number of interrupts received
-# via debounced button presses and displays
-# the number on the 7-segment display using
-# a lookup table. After reaching 49 counts,
+# Counts the number of button presses and 
+# displays the number on the 7-segment
+# display using a lookup table. The display
+# is updated using interrupts from a timer-
+# counter module. After reaching 49 counts,
 # the display resets to zero and continues.
 #------------------------------------------
 
