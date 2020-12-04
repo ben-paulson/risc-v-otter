@@ -30,7 +30,9 @@ do_stuff:       nop                             #
                 nop                             # Body of ISR, assume it is useful
                 nop                             # Assume interrupts happen in body only
                 nop                             #
-isr_pop:        lw          x15, 0(sp)          # Pop mepc
+isr_pop:        csrrw       x0, mie, x0         # Mask interrupt during pop phase
+                lw          x15, 0(sp)          # Pop mepc
                 csrrw       x0, mepc, x15       # Restore mepc
                 addi        sp, sp, 4           # Adjust sp
+                csrrw       x0, mie, x5         # Enable again
                 mret                            # Done w/ ISR
