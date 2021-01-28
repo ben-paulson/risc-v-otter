@@ -23,17 +23,6 @@ module maindec(
             stage <= 0;
         else
             stage <= stage + 1;
-           
-//    always_comb
-//        case (op)
-//            7'b0110011: controls <= 9'b110000010; // RTYPE
-//            7'b0000011: controls <= 9'b101001000; // LW
-//            7'b0100011: controls <= 9'b001010000; // SW
-//            7'b1100011: controls <= 9'b000100001; // BEQ
-//            7'b0010011: controls <= 9'b101000000; // ADDI
-//            7'b1101111: controls <= 9'b000000100; // J
-//            default:   controls <= 9'bxxxxxxxxx; // illegal op
-//        endcase
         
     always_comb
     begin
