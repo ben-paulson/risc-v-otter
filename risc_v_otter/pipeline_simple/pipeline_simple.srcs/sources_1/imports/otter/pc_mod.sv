@@ -12,8 +12,6 @@ module pc_mod(
     input [31:0] jalr,
     input [31:0] jal,
     input [31:0] branch,
-    input [31:0] mtvec,
-    input [31:0] mepc,
     output [31:0] pc
     );
     
@@ -21,14 +19,12 @@ module pc_mod(
     wire [31:0] pc_data_in;
 
     // Mux to choose whether to jump or increment address
-    mux_6t1_nb  #(.n(32)) pc_source_mux  (
-        .SEL   (pcSource),
+    mux_4t1_nb  #(.n(32)) pc_source_mux  (
+        .SEL   (pcSource[1:0]),
         .D0    (pc + 4),
         .D1    (jalr), 
         .D2    (branch), 
         .D3    (jal),
-        .D4    (mtvec),
-        .D5    (mepc),
         .D_OUT (pc_data_in) 
         );  
     

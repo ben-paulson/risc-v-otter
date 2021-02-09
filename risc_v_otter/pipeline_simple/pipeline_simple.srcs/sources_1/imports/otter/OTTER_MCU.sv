@@ -47,65 +47,168 @@ module OTTER_MCU(
     wire [3:0] alu_fun;
     wire [31:0] alu_result;
     
-    // Wires for CSR
-    wire [31:0] mtvec;
-    wire [31:0] mepc;
-    wire [31:0] csr_rd;
-    wire int_taken;
-    wire csr_WE;
-    wire mie;
+    // ID pipeline reg wires
+    wire [31:0] id_instr;
+    wire [31:0] id_pc;
+    
+    // EX pipeline reg wires
+    wire [31:0] ex_srcA;
+    wire [31:0] ex_srcB;
+    wire [3:0] ex_alu_fun;
+    wire [31:0] ex_pc;
+    wire ex_regWrite;
+    wire ex_memWE2;
+    wire ex_memRDEN2;
+    wire [1:0] ex_rf_wr_sel;
+    wire [31:0] ex_rs1;
+    wire [31:0] ex_rs2;
+    wire [31:0] ex_instr;
+    wire [31:0] ex_J_type;
+    wire [31:0] ex_B_type;
+    wire [31:0] ex_I_type;
+    
+    // M pipeline reg wires
+    wire [31:0] m_alu_result;
+    wire [31:0] m_rs2;
+    wire [31:0] m_pc;
+    wire m_regWrite;
+    wire m_memWE2;
+    wire m_memRDEN2;
+    wire [1:0] m_rf_wr_sel;
+    wire [31:0] m_instr;
+    
+    // WB pipeline reg wires
+    wire [31:0] wb_pc;
+    wire [31:0] wb_instr;
+    wire [1:0] wb_rf_wr_sel;
+    wire wb_regWrite;
+    wire [31:0] wb_memDOUT2;
     
     pc_mod pc (
         .clk      (clk),
-        .rst      (reset),
-        .PCWrite  (PCWrite),
+        .rst      (RST),
+        .PCWrite  (1'b1),
         .pcSource (pcSource),
         .jal      (jal),
         .jalr     (jalr),
         .branch   (branch),
-        .mtvec    (mtvec),
-        .mepc     (mepc),
         .pc       (pc_data)
         );
         
     Memory OTTER_MEMORY (
         .MEM_CLK   (clk),
-        .MEM_RDEN1 (memRDEN1),
-        .MEM_RDEN2 (memRDEN2),
-        .MEM_WE2   (memWE2),
+        .MEM_RDEN1 (1),
+        .MEM_RDEN2 (m_memRDEN2),
+        .MEM_WE2   (m_memWE2),
         .MEM_ADDR1 (pc_data[15:2]),
-        .MEM_ADDR2 (alu_result),
-        .MEM_DIN2  (rs2),
-        .MEM_SIZE  (ir[13:12]),
-        .MEM_SIGN  (ir[14]),
+        .MEM_ADDR2 (m_alu_result),
+        .MEM_DIN2  (m_rs2),
+        .MEM_SIZE  (m_instr[13:12]),
+        .MEM_SIGN  (m_instr[14]),
         .IO_IN     (iobus_in),
         .IO_WR     (iobus_wr),
         .MEM_DOUT1 (ir),
         .MEM_DOUT2 (memDOUT2)
         );
         
+     preg_if_id if_id (
+        .clk       (clk),
+        .pc_in     (pc_data), 
+        .instr_in  (ir),
+        .pc_out    (id_pc),
+        .instr_out (id_instr)
+        );
+        
+     preg_id_ex id_ex (
+        .clk           (clk),
+        .instr_in      (id_instr),
+        .pc_in         (id_pc),
+        .regWrite_in   (regWrite),
+        .memWrite_in   (memWE2),
+        .memRead2_in   (memRDEN2),
+        .alu_fun_in    (alu_fun),
+        .alu_srcA_in   (srcA),
+        .alu_srcB_in   (srcB),
+        .rs1_in        (rs1),
+        .rs2_in        (rs2),
+        .j_type_in     (J_type),
+        .b_type_in     (B_type),
+        .i_type_in     (I_type),
+        .rf_wr_sel_in  (rf_wr_sel),
+        .instr_out     (ex_instr),
+        .pc_out        (ex_pc),
+        .regWrite_out  (ex_regWrite),
+        .memWrite_out  (ex_memWE2),
+        .memRead2_out  (ex_memRDEN2),
+        .alu_fun_out   (ex_alu_fun),
+        .alu_srcA_out  (ex_srcA),
+        .alu_srcB_out  (ex_srcB),
+        .rs1_out       (ex_rs1),
+        .rs2_out       (ex_rs2),
+        .rf_wr_sel_out (ex_rf_wr_sel),
+        .j_type_out    (ex_J_type),
+        .b_type_out    (ex_B_type),
+        .i_type_out    (ex_I_type)
+        );
+        
+     preg_ex_m ex_m (
+        .clk           (clk),
+        .instr_in      (ex_instr),
+        .pc_in         (ex_pc),
+        .regWrite_in   (ex_regWrite),
+        .memWrite_in   (ex_memWE2),
+        .memRead2_in   (ex_memRDEN2),
+        .alu_in        (alu_result),
+        .rs2_in        (ex_rs2),
+        .rf_wr_sel_in  (ex_rf_wr_sel),
+        .instr_out     (m_instr),
+        .pc_out        (m_pc),
+        .regWrite_out  (m_regWrite),
+        .memWrite_out  (m_memWE2),
+        .memRead2_out  (m_memRDEN2),
+        .alu_out       (m_alu_result),
+        .rs2_out       (m_rs2),
+        .rf_wr_sel_out (m_rf_wr_sel)
+        );
+        
+     preg_m_wb m_wb (
+        .clk           (clk),
+        .instr_in      (m_instr),
+        .pc_in         (m_pc),
+        .regWrite_in   (m_regWrite),
+        .rf_wr_sel_in  (m_rf_wr_sel),
+        .alu_in        (m_alu_result),
+        .memdout2_in   (memDOUT2),
+        .instr_out     (wb_instr),
+        .pc_out        (wb_pc),
+        .regWrite_out  (wb_regWrite),
+        .memdout2_out  (wb_memDOUT2),
+        .alu_out       (wb_alu_result),
+        .rf_wr_sel_out (wb_rf_wr_sel)
+        );
+        
      mux_4t1_nb  #(.n(32)) rf_wd_mux (
-        .SEL   (rf_wr_sel),
-        .D0    (pc_data + 4),
-        .D1    (csr_rd),
-        .D2    (memDOUT2), 
-        .D3    (alu_result),
+        .SEL   (wb_rf_wr_sel),
+        .D0    (wb_pc_data + 4),
+        .D1    (0), // was csr_rd
+        .D2    (wb_memDOUT2), 
+        .D3    (wb_alu_result),
         .D_OUT (rf_wd)
         );  
         
     RegFile regfile (
         .wd   (rf_wd),
         .clk  (clk), 
-        .en   (regWrite),
-        .adr1 (ir[19:15]),
-        .adr2 (ir[24:20]),
-        .wa   (ir[11:7]),
+        .en   (wb_regWrite),
+        .adr1 (id_instr[19:15]),
+        .adr2 (id_instr[24:20]),
+        .wa   (wb_instr[11:7]),
         .rs1  (rs1), 
         .rs2  (rs2)
         );
         
     immed_gen ig (
-        .ir     (ir[31:7]),
+        .ir     (id_instr[31:7]),
         .U_type (U_type),
         .I_type (I_type),
         .S_type (S_type),
@@ -114,11 +217,11 @@ module OTTER_MCU(
         );
         
     branch_addr_gen bag (
-        .J_type (J_type),
-        .B_type (B_type),
-        .I_type (I_type),
+        .J_type (ex_J_type),
+        .B_type (ex_B_type),
+        .I_type (ex_I_type),
         .pc     (pc_data),
-        .rs1    (rs1),
+        .rs1    (ex_rs1),
         .jal    (jal),
         .jalr   (jalr),
         .branch (branch)
@@ -136,71 +239,43 @@ module OTTER_MCU(
         .D0    (rs2),
         .D1    (I_type),
         .D2    (S_type), 
-        .D3    (pc_data),
+        .D3    (id_pc),
         .D_OUT (srcB)
         );
             
     alu ALU (
-        .srcA    (srcA),
-        .srcB    (srcB),
-        .alu_fun (alu_fun),
+        .srcA    (ex_srcA),
+        .srcB    (ex_srcB),
+        .alu_fun (ex_alu_fun),
         .result  (alu_result)
         );
         
     branch_cond_gen bcg (
-        .rs1    (rs1),
-        .rs2    (rs2),
-        .br_eq  (br_eq),
-        .br_lt  (br_lt),
-        .br_ltu (br_ltu)
+        .opcode   (ex_instr[6:0]),
+        .func3    (ex_instr[14:12]),
+        .rs1      (ex_rs1),
+        .rs2      (ex_rs2),
+        .pcSource (pcSource)
         );
         
-    CU_FSM cu_fsm (
-        .intr      (intr & mie),
-        .clk       (clk),
-        .RST       (RST),
-        .opcode    (ir[6:0]),
-        .func3     (ir[14:12]),
+    CU_DCDR cu_dcdr (
+        .opcode    (id_instr[6:0]),
+        .func7     (id_instr[30]),
+        .func3     (id_instr[14:12]),
+        .int_taken (int_taken),
+        .alu_fun   (alu_fun),
+        .alu_srcA  (alu_srcA),
+        .alu_srcB  (alu_srcB), 
+        .rf_wr_sel (rf_wr_sel),
         .pcWrite   (PCWrite),
         .regWrite  (regWrite),
         .memWE2    (memWE2),
         .memRDEN1  (memRDEN1),
         .memRDEN2  (memRDEN2),
-        .reset     (reset),
-        .csr_WE    (csr_WE),
-        .int_taken (int_taken)
+        .reset     (reset)
         );
         
-    CU_DCDR cu_dcdr (
-        .br_eq     (br_eq),
-        .br_lt     (br_lt),
-        .br_ltu    (br_ltu),
-        .opcode    (ir[6:0]),
-        .func7     (ir[30]),
-        .func3     (ir[14:12]),
-        .int_taken (int_taken),
-        .alu_fun   (alu_fun),
-        .pcSource  (pcSource),
-        .alu_srcA  (alu_srcA),
-        .alu_srcB  (alu_srcB), 
-        .rf_wr_sel (rf_wr_sel)
-        );
-        
-    CSR my_csr (
-        .CLK       (clk),
-        .RST       (reset),
-        .INT_TAKEN (int_taken),
-        .ADDR      (ir[31:20]),
-        .PC        (pc_data),
-        .WD        (rs1),
-        .WR_EN     (csr_WE), 
-        .RD        (csr_rd),
-        .CSR_MEPC  (mepc),  
-        .CSR_MTVEC (mtvec), 
-        .CSR_MIE   (mie)    
-        ); 
-        
-    assign iobus_out = rs2;
-    assign iobus_addr = alu_result;
+    assign iobus_out = m_rs2;
+    assign iobus_addr = m_alu_result;
                 
 endmodule

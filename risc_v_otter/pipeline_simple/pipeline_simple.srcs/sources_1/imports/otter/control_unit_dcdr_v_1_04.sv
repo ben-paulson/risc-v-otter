@@ -38,18 +38,21 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module CU_DCDR(
-    input br_eq, 
-    input br_lt, 
-    input br_ltu,
     input [6:0] opcode,   //-  ir[6:0]
     input func7,          //-  ir[30]
     input [2:0] func3,    //-  ir[14:12] 
     input int_taken,
     output logic [3:0] alu_fun,
-    output logic [2:0] pcSource,
     output logic alu_srcA,
     output logic [1:0] alu_srcB, 
-    output logic [1:0] rf_wr_sel   );
+    output logic [1:0] rf_wr_sel,
+    output logic pcWrite,
+    output logic regWrite,
+    output logic memWE2,
+    output logic memRDEN1,
+    output logic memRDEN2,
+    output logic reset
+    );
     
     //- datatypes for RISC-V opcode types
     typedef enum logic [6:0] {
@@ -116,8 +119,11 @@ module CU_DCDR(
     always_comb
     begin 
         //- schedule all values to avoid latch
-        pcSource = 3'b000;  alu_srcB = 2'b00;    rf_wr_sel = 2'b00; 
+        alu_srcB = 2'b00;    rf_wr_sel = 2'b00; 
         alu_srcA = 1'b0;   alu_fun  = 4'b0000;
+        // old CU_FSM outputs (always pcWrite and memRead1 - assume no hazard)
+        pcWrite = 1'b1;    regWrite = 1'b0;    reset = 1'b0;  
+        memWE2 = 1'b0;     memRDEN1 = 1'b1;    memRDEN2 = 1'b0;
         
         case(OPCODE)
             AUIPC:
@@ -126,76 +132,33 @@ module CU_DCDR(
                 alu_srcA = 1'b1;
                 alu_srcB = 2'b11;
                 rf_wr_sel = 2'b11;
-                pcSource = 3'b000;
+                regWrite = 1'b1;
             end
             LUI:
             begin
                 alu_fun = 4'b1001; 
                 alu_srcA = 1'b1; 
                 rf_wr_sel = 2'b11; 
+                regWrite = 1'b1;
             end
             
             SYS:
             begin
                 case (func3)
                     3'b001: rf_wr_sel = 2'b01; // csrrw
-                    3'b000: pcSource = 3'b101; // mret
                 endcase
             end
             
             JAL:
             begin
                 rf_wr_sel = 2'b00;
-                pcSource = 3'b011;
+                regWrite = 1'b1;
             end
             
             JALR:
             begin
                 rf_wr_sel = 2'b00;
-                pcSource = 3'b001;
-            end
-            
-            BRANCH:
-            begin
-                case (FUNC3_B)
-                    BEQ:
-                    begin
-                        if (br_eq == 1) pcSource = 3'b010;
-                        else pcSource = 3'b000;
-                    end
-                    
-                    BNE:
-                    begin
-                        if (br_eq == 0) pcSource = 3'b010;
-                        else pcSource = 3'b000;
-                    end
-                    
-                    BLT:
-                    begin
-                        if (br_lt == 1) pcSource = 3'b010;
-                        else pcSource = 3'b000;
-                    end
-                    
-                    BGE:
-                    begin
-                        if (br_lt == 0) pcSource = 3'b010;
-                        else pcSource = 3'b000;
-                    end
-                    
-                    BLTU:
-                    begin
-                        if (br_ltu == 1) pcSource = 3'b010;
-                        else pcSource = 3'b000;
-                    end
-                    
-                    BGEU:
-                    begin
-                        if (br_ltu == 0) pcSource = 3'b010;
-                        else pcSource = 3'b000;
-                    end
-                    
-                    default: pcSource = 3'b000;
-                endcase
+                regWrite = 1'b1;
             end
             
             LOAD: 
@@ -204,7 +167,7 @@ module CU_DCDR(
                 alu_srcA = 1'b0; 
                 alu_srcB = 2'b01; 
                 rf_wr_sel = 2'b10; 
-                pcSource = 3'b000;
+                memRDEN2 = 1'b1;
             end
             
             STORE:
@@ -212,7 +175,7 @@ module CU_DCDR(
                 alu_fun = 4'b0000; 
                 alu_srcA = 1'b0; 
                 alu_srcB = 2'b10;
-                pcSource = 3'b000;
+                memWE2 = 1'b1;
             end
             
             OP_IMM:
@@ -220,7 +183,7 @@ module CU_DCDR(
                 alu_srcA = 1'b0;
                 alu_srcB = 2'b01;
                 rf_wr_sel = 2'b11;
-                pcSource = 3'b000;
+                regWrite = 1'b1;
                 case(FUNC3_RI)
                     3'b000: alu_fun = 4'b0000; // add
                     SLL:    alu_fun = 4'b0001; // slli
@@ -239,7 +202,6 @@ module CU_DCDR(
                     _AND:   alu_fun = 4'b0111; // andi                    
                     default: 
                     begin
-                        pcSource = 3'b000;
                         alu_fun = 4'b0000;
                         alu_srcA = 1'b0; 
                         alu_srcB = 2'b00; 
@@ -253,7 +215,7 @@ module CU_DCDR(
                 alu_srcA = 1'b0;
                 alu_srcB = 2'b00;
                 rf_wr_sel = 2'b11;
-                pcSource = 3'b000;
+                regWrite = 1'b1;
                 case(FUNC3_RI)
                     3'b000: 
                     begin // same FUNC3, differ by FUNC7 only
@@ -279,7 +241,6 @@ module CU_DCDR(
                     _AND:   alu_fun = 4'b0111; // and                    
                     default: 
                     begin
-                        pcSource = 3'b000;
                         alu_fun = 4'b0000;
                         alu_srcA = 1'b0; 
                         alu_srcB = 2'b00; 
@@ -290,17 +251,12 @@ module CU_DCDR(
 
             default:
             begin
-                 pcSource = 3'b000; 
                  alu_srcB = 2'b00; 
                  rf_wr_sel = 2'b00; 
                  alu_srcA = 1'b0; 
                  alu_fun = 4'b0000;
             end
-            endcase
-            
-        // Load mtvec to PC if interrupt is taken
-        if (int_taken == 1) pcSource = 3'b100;
-        
+        endcase        
     end
 
 endmodule
