@@ -69,7 +69,7 @@
     (* ram_decomp = "power" *) logic [31:0] memory [0:16383];
     
     initial begin
-        $readmemh("otter_memory.mem", memory, 0, 16383);
+        $readmemh("otter_memory.mem", memory, 0, 16383); // 16383
     end
     
     assign wordAddr2 = MEM_ADDR2[15:2];
@@ -105,17 +105,18 @@
 			// removed to avoid mistakes causing memory to be zeroed.
         endcase
       end
-
-        // read all data synchronously required for BRAM
-        if(MEM_RDEN1)                       // need EN for extra load cycle to not change instruction
-            MEM_DOUT1 <= memory[MEM_ADDR1];
-
-        if(MEM_RDEN2)                         // Read word from memory
-            memReadWord <= memory[wordAddr2];
     end
        
     // Change the data word into sized bytes and sign extend 
     always_comb begin
+    
+        // previously: read all data synchronously required for BRAM
+        // now: changed reads to async for pipeline purposes
+        if(MEM_RDEN1)                       // need EN for extra load cycle to not change instruction
+            MEM_DOUT1 <= memory[MEM_ADDR1];
+        if(MEM_RDEN2)                         // Read word from memory
+            memReadWord <= memory[wordAddr2];
+            
         case({MEM_SIGN,MEM_SIZE,byteOffset})
             5'b00011: memReadSized = {{24{memReadWord[31]}},memReadWord[31:24]};    // signed byte
             5'b00010: memReadSized = {{24{memReadWord[23]}},memReadWord[23:16]};

@@ -9,8 +9,8 @@ module preg_if_id(
     );
     
     always @ (posedge clk) begin
-        pc_out = pc_in;
-        instr_out = instr_in;
+        pc_out = pc_in; // PC will not match up with instr if not -4
+        instr_out = instr_in; // (only need -4 for this pipe reg, not others)
     end
     
 endmodule

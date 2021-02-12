@@ -83,6 +83,7 @@ module OTTER_MCU(
     wire [1:0] wb_rf_wr_sel;
     wire wb_regWrite;
     wire [31:0] wb_memDOUT2;
+    wire [31:0] wb_alu_result;
     
     pc_mod pc (
         .clk      (clk),
@@ -189,7 +190,7 @@ module OTTER_MCU(
         
      mux_4t1_nb  #(.n(32)) rf_wd_mux (
         .SEL   (wb_rf_wr_sel),
-        .D0    (wb_pc_data + 4),
+        .D0    (wb_pc + 4),
         .D1    (0), // was csr_rd
         .D2    (wb_memDOUT2), 
         .D3    (wb_alu_result),
@@ -220,7 +221,7 @@ module OTTER_MCU(
         .J_type (ex_J_type),
         .B_type (ex_B_type),
         .I_type (ex_I_type),
-        .pc     (pc_data),
+        .pc     (ex_pc),
         .rs1    (ex_rs1),
         .jal    (jal),
         .jalr   (jalr),
@@ -238,7 +239,7 @@ module OTTER_MCU(
         .SEL   (alu_srcB),
         .D0    (rs2),
         .D1    (I_type),
-        .D2    (S_type), 
+        .D2    (S_type),
         .D3    (id_pc),
         .D_OUT (srcB)
         );

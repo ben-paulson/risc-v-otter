@@ -24,7 +24,7 @@ module testbench();
      initial begin
         iobus_in = 32'h00000000;
         rst = 1'b1;
-        #15;
+        #12;
         rst = 1'b0;
      end
 
