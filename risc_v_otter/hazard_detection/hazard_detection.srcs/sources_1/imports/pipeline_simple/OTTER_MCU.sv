@@ -51,6 +51,13 @@ module OTTER_MCU(
     wire [31:0] id_instr;
     wire [31:0] id_pc;
     
+    // Hazard detection unit wires
+    wire id_regWrite;
+    wire id_memWE2;
+    wire stall;
+    wire invalid_branch;
+    wire [31:0] if_ir;
+    
     // EX pipeline reg wires
     wire [31:0] ex_srcA;
     wire [31:0] ex_srcB;
@@ -100,7 +107,7 @@ module OTTER_MCU(
     pc_mod pc (
         .clk      (clk),
         .rst      (RST),
-        .PCWrite  (1'b1),
+        .PCWrite  (~stall),
         .pcSource (pcSource),
         .jal      (jal),
         .jalr     (jalr),
@@ -124,20 +131,38 @@ module OTTER_MCU(
         .MEM_DOUT2 (memDOUT2)
         );
         
+    mux_2t1_nb  #(.n(32)) invalid_branch_mux (
+        .SEL   (invalid_branch),
+        .D0    (ir),
+        .D1    (32'h00000013), // nop
+        .D_OUT (if_ir)
+        );  
+        
      preg_if_id if_id (
         .clk       (clk),
+        .write     (~stall),
         .pc_in     (pc_data), 
-        .instr_in  (ir),
+        .instr_in  (if_ir),
         .pc_out    (id_pc),
         .instr_out (id_instr)
+        );
+        
+    hazard_detection haz_det (
+        .pcSource       (pcSource),
+        .if_id_rs1      (id_instr[19:15]),
+        .if_id_rs2      (id_instr[24:20]),
+        .id_ex_rd       (ex_instr[11:7]),
+        .id_ex_memRead  (ex_memRDEN2),
+        .stall          (stall),
+        .invalid_branch (invalid_branch)
         );
         
      preg_id_ex id_ex (
         .clk              (clk),
         .instr_in         (id_instr),
         .pc_in            (id_pc),
-        .regWrite_in      (regWrite),
-        .memWrite_in      (memWE2),
+        .regWrite_in      (id_regWrite),
+        .memWrite_in      (id_memWE2),
         .memRead2_in      (memRDEN2),
         .alu_fun_in       (alu_fun),
         .alu_srcA_in      (srcA),
@@ -169,6 +194,7 @@ module OTTER_MCU(
         );
         
      forwarding fwd_unit (
+        .store         (ex_memWE2),
         .id_ex_rs1     (ex_instr[19:15]),
         .id_ex_rs2     (ex_instr[24:20]),
         .alu_srcA      (ex_alu_srcA_sel),
@@ -344,6 +370,20 @@ module OTTER_MCU(
         .memRDEN2  (memRDEN2),
         .reset     (reset)
         );
+        
+    mux_2t1_nb  #(.n(32)) cu_dcdr_regwrite_mux (
+        .SEL   (stall | invalid_branch), 
+        .D0    (regWrite), 
+        .D1    (1'b0), 
+        .D_OUT (id_regWrite)
+        );  
+    
+    mux_2t1_nb  #(.n(32)) cu_dcdr_memwrite_mux (
+        .SEL   (stall | invalid_branch), 
+        .D0    (memWE2), 
+        .D1    (1'b0), 
+        .D_OUT (id_memWE2)
+        );  
         
     assign iobus_out = m_rs2;
     assign iobus_addr = m_alu_result;

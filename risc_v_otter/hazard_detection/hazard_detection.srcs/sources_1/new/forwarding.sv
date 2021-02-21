@@ -1,6 +1,7 @@
 `timescale 1ns / 1ps
 
 module forwarding(
+    input store,
     input [4:0] id_ex_rs1,
     input [4:0] id_ex_rs2,
     input alu_srcA,
@@ -28,6 +29,8 @@ module forwarding(
         // Schedule outputs to avoid latch
         forwardA = 2'b00; forwardB = 2'b00;
         alu_fwd_a = 2'b00; alu_fwd_b = 2'b00;
+        if (store && ex_m_rd == id_ex_rs2) forwardB = 2'b01;
+        if (store && m_wb_rd == id_ex_rs2) forwardB = 2'b10;
         // Ex hazard - forward data from 1 instruction above
         if (ex_haz) begin
             if (ex_m_rd == id_ex_rs1) begin
@@ -41,7 +44,7 @@ module forwarding(
                 if (alu_srcB == 2'b00) alu_fwd_b = 2'b01;
             end
         end
-        else if (mem_haz) begin
+        if (mem_haz) begin
             // Mem hazard - forward data from 2 instructions up
             if (m_wb_rd == id_ex_rs1 && !(ex_m_rd == id_ex_rs1)) begin
                 forwardA = 2'b10;
@@ -54,12 +57,12 @@ module forwarding(
                 if (alu_srcB == 2'b00) alu_fwd_b = 2'b10;
             end
         end
-        else begin
-            forwardA = 2'b00;
-            forwardB = 2'b00;
-            alu_fwd_a = 2'b00;
-            alu_fwd_b = 2'b00;
-        end
+//        else begin
+//            forwardA = 2'b00;
+//            forwardB = 2'b00;
+//            alu_fwd_a = 2'b00;
+//            alu_fwd_b = 2'b00;
+//        end
     end
     
 endmodule
