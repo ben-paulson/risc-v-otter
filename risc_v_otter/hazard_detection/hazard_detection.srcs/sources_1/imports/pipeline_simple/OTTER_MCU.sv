@@ -54,6 +54,8 @@ module OTTER_MCU(
     // EX pipeline reg wires
     wire [31:0] ex_srcA;
     wire [31:0] ex_srcB;
+    wire ex_alu_srcA_sel;
+    wire [1:0] ex_alu_srcB_sel;
     wire [3:0] ex_alu_fun;
     wire [31:0] ex_pc;
     wire ex_regWrite;
@@ -66,6 +68,16 @@ module OTTER_MCU(
     wire [31:0] ex_J_type;
     wire [31:0] ex_B_type;
     wire [31:0] ex_I_type;
+    
+    // Forwarding unit wires
+    wire [31:0] id_ex_rs1;
+    wire [31:0] id_ex_rs2;
+    wire [31:0] alu_in_a;
+    wire [31:0] alu_in_b;
+    wire [1:0] ex_fwd_rs1;
+    wire [1:0] ex_fwd_rs2;
+    wire [1:0] alu_fwd_a;
+    wire [1:0] alu_fwd_b;
     
     // M pipeline reg wires
     wire [31:0] m_alu_result;
@@ -121,35 +133,56 @@ module OTTER_MCU(
         );
         
      preg_id_ex id_ex (
-        .clk           (clk),
-        .instr_in      (id_instr),
-        .pc_in         (id_pc),
-        .regWrite_in   (regWrite),
-        .memWrite_in   (memWE2),
-        .memRead2_in   (memRDEN2),
-        .alu_fun_in    (alu_fun),
-        .alu_srcA_in   (srcA),
-        .alu_srcB_in   (srcB),
-        .rs1_in        (rs1),
-        .rs2_in        (rs2),
-        .j_type_in     (J_type),
-        .b_type_in     (B_type),
-        .i_type_in     (I_type),
-        .rf_wr_sel_in  (rf_wr_sel),
-        .instr_out     (ex_instr),
-        .pc_out        (ex_pc),
-        .regWrite_out  (ex_regWrite),
-        .memWrite_out  (ex_memWE2),
-        .memRead2_out  (ex_memRDEN2),
-        .alu_fun_out   (ex_alu_fun),
-        .alu_srcA_out  (ex_srcA),
-        .alu_srcB_out  (ex_srcB),
-        .rs1_out       (ex_rs1),
-        .rs2_out       (ex_rs2),
-        .rf_wr_sel_out (ex_rf_wr_sel),
-        .j_type_out    (ex_J_type),
-        .b_type_out    (ex_B_type),
-        .i_type_out    (ex_I_type)
+        .clk              (clk),
+        .instr_in         (id_instr),
+        .pc_in            (id_pc),
+        .regWrite_in      (regWrite),
+        .memWrite_in      (memWE2),
+        .memRead2_in      (memRDEN2),
+        .alu_fun_in       (alu_fun),
+        .alu_srcA_in      (srcA),
+        .alu_srcB_in      (srcB),
+        .alu_srcA_sel_in  (alu_srcA),
+        .alu_srcB_sel_in  (alu_srcB),
+        .rs1_in           (rs1),
+        .rs2_in           (rs2),
+        .j_type_in        (J_type),
+        .b_type_in        (B_type),
+        .i_type_in        (I_type),
+        .rf_wr_sel_in     (rf_wr_sel),
+        .instr_out        (ex_instr),
+        .pc_out           (ex_pc),
+        .regWrite_out     (ex_regWrite),
+        .memWrite_out     (ex_memWE2),
+        .memRead2_out     (ex_memRDEN2),
+        .alu_fun_out      (ex_alu_fun),
+        .alu_srcA_out     (ex_srcA),
+        .alu_srcB_out     (ex_srcB),
+        .alu_srcA_sel_out (ex_alu_srcA_sel),
+        .alu_srcB_sel_out (ex_alu_srcB_sel),
+        .rs1_out          (id_ex_rs1),
+        .rs2_out          (id_ex_rs2),
+        .rf_wr_sel_out    (ex_rf_wr_sel),
+        .j_type_out       (ex_J_type),
+        .b_type_out       (ex_B_type),
+        .i_type_out       (ex_I_type)
+        );
+        
+     forwarding fwd_unit (
+        .id_ex_rs1     (ex_instr[19:15]),
+        .id_ex_rs2     (ex_instr[24:20]),
+        .alu_srcA      (ex_alu_srcA_sel),
+        .alu_srcB      (ex_alu_srcB_sel),
+        .alu_a         (ex_srcA),
+        .alu_b         (ex_srcA),
+        .ex_m_rd       (m_instr[11:7]),
+        .ex_m_regWrite (m_regWrite),
+        .m_wb_rd       (wb_instr[11:7]),
+        .m_wb_regWrite (wb_regWrite),
+        .forwardA      (ex_fwd_rs1),
+        .forwardB      (ex_fwd_rs2),
+        .alu_fwd_a     (alu_fwd_a),
+        .alu_fwd_b     (alu_fwd_b)
         );
         
      preg_ex_m ex_m (
@@ -245,11 +278,47 @@ module OTTER_MCU(
         );
             
     alu ALU (
-        .srcA    (ex_srcA),
-        .srcB    (ex_srcB),
+        .srcA    (alu_in_a),
+        .srcB    (alu_in_b),
         .alu_fun (ex_alu_fun),
         .result  (alu_result)
         );
+        
+    mux_4t1_nb  #(.n(32)) alu_fwd_a_mux (
+        .SEL   (alu_fwd_a), 
+        .D0    (ex_srcA), 
+        .D1    (m_alu_result), 
+        .D2    (rf_wd),
+        .D3    (0), // don't need this one
+        .D_OUT (alu_in_a)
+        );  
+        
+    mux_4t1_nb  #(.n(32)) alu_fwd_b_mux (
+        .SEL   (alu_fwd_b), 
+        .D0    (ex_srcB), 
+        .D1    (m_alu_result), 
+        .D2    (rf_wd),
+        .D3    (0), // don't need this one
+        .D_OUT (alu_in_b)
+        );  
+        
+    mux_4t1_nb  #(.n(32)) rs1_fwd_mux (
+        .SEL   (ex_fwd_rs1), 
+        .D0    (id_ex_rs1), 
+        .D1    (m_alu_result), 
+        .D2    (rf_wd),
+        .D3    (0), // don't need this one
+        .D_OUT (ex_rs1)
+        );  
+        
+    mux_4t1_nb  #(.n(32)) rs2_fwd_mux (
+        .SEL   (ex_fwd_rs2), 
+        .D0    (id_ex_rs2), 
+        .D1    (m_alu_result), 
+        .D2    (rf_wd),
+        .D3    (0), // don't need this one
+        .D_OUT (ex_rs2)
+        );  
         
     branch_cond_gen bcg (
         .opcode   (ex_instr[6:0]),

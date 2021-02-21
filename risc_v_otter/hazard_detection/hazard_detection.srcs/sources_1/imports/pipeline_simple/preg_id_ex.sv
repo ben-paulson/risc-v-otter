@@ -10,6 +10,8 @@ module preg_id_ex(
     input [3:0] alu_fun_in,
     input [31:0] alu_srcA_in,
     input [31:0] alu_srcB_in,
+    input alu_srcA_sel_in,
+    input [1:0] alu_srcB_sel_in,
     input [1:0] rf_wr_sel_in,
     input [31:0] rs1_in,
     input [31:0] rs2_in,
@@ -24,6 +26,8 @@ module preg_id_ex(
     output reg [3:0] alu_fun_out,
     output reg [31:0] alu_srcA_out,
     output reg [31:0] alu_srcB_out,
+    output reg alu_srcA_sel_out,
+    output reg [1:0] alu_srcB_sel_out,
     output reg [1:0] rf_wr_sel_out,
     output reg [31:0] rs1_out,
     output reg [31:0] rs2_out,
@@ -40,6 +44,8 @@ module preg_id_ex(
         alu_fun_out = alu_fun_in;
         alu_srcA_out = alu_srcA_in;
         alu_srcB_out = alu_srcB_in;
+        alu_srcA_sel_out = alu_srcA_sel_in;
+        alu_srcB_sel_out = alu_srcB_sel_in;
         rf_wr_sel_out = rf_wr_sel_in;
         rs1_out = rs1_in;
         rs2_out = rs2_in;
