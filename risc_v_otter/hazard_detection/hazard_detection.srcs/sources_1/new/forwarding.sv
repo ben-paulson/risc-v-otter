@@ -57,12 +57,6 @@ module forwarding(
                 if (alu_srcB == 2'b00) alu_fwd_b = 2'b10;
             end
         end
-//        else begin
-//            forwardA = 2'b00;
-//            forwardB = 2'b00;
-//            alu_fwd_a = 2'b00;
-//            alu_fwd_b = 2'b00;
-//        end
     end
     
 endmodule
