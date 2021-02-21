@@ -57,6 +57,7 @@ module OTTER_MCU(
     wire stall;
     wire invalid_branch;
     wire [31:0] if_ir;
+    wire [31:0] id_instr_out;
     
     // EX pipeline reg wires
     wire [31:0] ex_srcA;
@@ -131,11 +132,18 @@ module OTTER_MCU(
         .MEM_DOUT2 (memDOUT2)
         );
         
-    mux_2t1_nb  #(.n(32)) invalid_branch_mux (
+    mux_2t1_nb  #(.n(32)) if_invalid_branch_mux (
         .SEL   (invalid_branch),
         .D0    (ir),
         .D1    (32'h00000013), // nop
         .D_OUT (if_ir)
+        );
+        
+    mux_2t1_nb  #(.n(32)) id_invalid_branch_mux (
+        .SEL   (invalid_branch),
+        .D0    (id_instr),
+        .D1    (32'h00000013), // nop
+        .D_OUT (id_instr_out)
         );  
         
      preg_if_id if_id (
@@ -159,7 +167,7 @@ module OTTER_MCU(
         
      preg_id_ex id_ex (
         .clk              (clk),
-        .instr_in         (id_instr),
+        .instr_in         (id_instr_out),
         .pc_in            (id_pc),
         .regWrite_in      (id_regWrite),
         .memWrite_in      (id_memWE2),
