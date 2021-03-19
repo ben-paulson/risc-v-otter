@@ -8,6 +8,8 @@ module pc_mod(
     input clk,
     input rst,
     input PCWrite,
+    input ivb,
+    input [31:0] id_pc,
     input [2:0] pcSource,
     input [31:0] jalr,
     input [31:0] jal,
@@ -17,11 +19,19 @@ module pc_mod(
     
     // Data input for the PC register
     wire [31:0] pc_data_in;
+    wire [31:0] pcplus4;
+    
+    mux_2t1_nb  #(.n(32)) pcplus4_mux (
+        .SEL   (ivb), 
+        .D0    (pc + 4), 
+        .D1    (id_pc + 4), 
+        .D_OUT (pcplus4)
+        );
 
     // Mux to choose whether to jump or increment address
     mux_4t1_nb  #(.n(32)) pc_source_mux  (
         .SEL   (pcSource[1:0]),
-        .D0    (pc + 4),
+        .D0    (pcplus4),
         .D1    (jalr), 
         .D2    (branch), 
         .D3    (jal),

@@ -55,7 +55,8 @@ module OTTER_MCU(
     wire id_regWrite;
     wire id_memWE2;
     wire stall;
-    wire invalid_branch;
+    wire flush_if;
+    wire flush_id;
     wire invalid_branch_cc2;
     wire [31:0] if_ir;
     wire [31:0] id_instr_out;
@@ -106,11 +107,56 @@ module OTTER_MCU(
     wire [31:0] wb_memDOUT2;
     wire [31:0] wb_alu_result;
     
+    // Branch Prediction wires
+    wire bad_pred;
+    wire [1:0] bpred;
+    wire [1:0] nbpred;
+    wire [1:0] ex_bpred;
+    wire [31:0] jalr_p;
+    wire [31:0] jalr_c;
+    wire [31:0] jal_p;
+    wire [31:0] jal_c;
+    wire [31:0] branch_p;
+    wire [31:0] branch_c;
+    wire [31:0] pcSource_p;
+    wire [31:0] pcSource_c;
+    wire [31:0] ex_pcSource_p;
+        
+    mux_2t1_nb  #(.n(32)) jalr_mux (
+        .SEL   (bad_pred),
+        .D0    (jalr_p), 
+        .D1    (jalr_c), 
+        .D_OUT (jalr)
+        );  
+        
+    mux_2t1_nb  #(.n(32)) branch_mux (
+        .SEL   (bad_pred), 
+        .D0    (branch_p), 
+        .D1    (branch_c), 
+        .D_OUT (branch)
+        );  
+        
+    mux_2t1_nb  #(.n(32)) jal_mux (
+        .SEL   (bad_pred), 
+        .D0    (jal_p), 
+        .D1    (jal_c), 
+        .D_OUT (jal)
+        );  
+        
+    mux_2t1_nb  #(.n(32)) pcSource_mux (
+        .SEL   (bad_pred), 
+        .D0    (pcSource_p), 
+        .D1    (pcSource_c), 
+        .D_OUT (pcSource)
+        );  
+    
     pc_mod pc (
         .clk      (clk),
         .rst      (RST),
         .PCWrite  (~stall),
+        .ivb      (bad_pred),
         .pcSource (pcSource),
+        .id_pc    (id_pc),
         .jal      (jal),
         .jalr     (jalr),
         .branch   (branch),
@@ -135,15 +181,17 @@ module OTTER_MCU(
         .MEM_DOUT2 (wb_memDOUT2) // was memDOUT2
         );
         
-    mux_2t1_nb  #(.n(32)) if_invalid_branch_mux (
-        .SEL   (invalid_branch_cc2),
-        .D0    (1'b1),
-        .D1    (1'b1), // nop 1'b0
-        .D_OUT (memRDEN1)
+    bhist_table branch_history (
+        .clk        (clk),
+        .we         (1), // bhist_we
+        .wa         (ex_pc[11:2]),
+        .newp       (nbpred),
+        .instr      (pc_data[11:2]),
+        .prediction (bpred)
         );
         
     mux_2t1_nb  #(.n(32)) id_invalid_branch_mux (
-        .SEL   (invalid_branch | invalid_branch_cc2),
+        .SEL   (flush_id | invalid_branch_cc2),
         .D0    (id_instr_out),
         .D1    (32'h00000013), // nop
         .D_OUT (id_instr)
@@ -153,19 +201,33 @@ module OTTER_MCU(
         .clk       (clk),
         .write     (~stall),
         .pc_in     (pc_data),
-        .ivb_in    (invalid_branch),
+        .ivb_in    (flush_if),
         .pc_out    (id_pc),
         .ivb_out   (invalid_branch_cc2)
         );
         
     hazard_detection haz_det (
-        .pcSource       (pcSource),
         .if_id_rs1      (id_instr[19:15]),
         .if_id_rs2      (id_instr[24:20]),
         .id_ex_rd       (ex_instr[11:7]),
         .id_ex_memRead  (ex_memRDEN2),
-        .stall          (stall),
-        .invalid_branch (invalid_branch)
+        .stall          (stall)
+        );
+        
+    branch_predict bpredictor (
+        .opcode   (id_instr[6:0]),
+        .pred     (bpred),
+        .pcSource (pcSource_p)
+        );
+        
+    branch_correction bcorrect (
+        .pcSource_p (ex_pcSource_p),
+        .pcSource_c (pcSource_c),
+        .pred       (ex_bpred),
+        .new_pred   (nbpred),
+        .flush_if   (flush_if),
+        .flush_id   (flush_id),
+        .bad_pred   (bad_pred)
         );
         
      preg_id_ex id_ex (
@@ -185,7 +247,9 @@ module OTTER_MCU(
         .j_type_in        (J_type),
         .b_type_in        (B_type),
         .i_type_in        (I_type),
+        .pcSrc_pred_in    (pcSource_p),
         .rf_wr_sel_in     (rf_wr_sel),
+        .branch_pred_in   (bpred),
         .instr_out        (ex_instr),
         .pc_out           (ex_pc),
         .regWrite_out     (ex_regWrite),
@@ -201,7 +265,9 @@ module OTTER_MCU(
         .rf_wr_sel_out    (ex_rf_wr_sel),
         .j_type_out       (ex_J_type),
         .b_type_out       (ex_B_type),
-        .i_type_out       (ex_I_type)
+        .i_type_out       (ex_I_type),
+        .pcSrc_pred_out   (ex_pcSource_p),
+        .branch_pred_out  (ex_bpred)
         );
         
      forwarding fwd_unit (
@@ -286,14 +352,25 @@ module OTTER_MCU(
         );
         
     branch_addr_gen bag (
+        .J_type (J_type),
+        .B_type (B_type),
+        .I_type (I_type),
+        .pc     (id_pc),
+        .rs1    (rs1),
+        .jal    (jal_p),
+        .jalr   (jalr_p),
+        .branch (branch_p)
+        );
+        
+    branch_addr_gen bag_correction (
         .J_type (ex_J_type),
         .B_type (ex_B_type),
         .I_type (ex_I_type),
         .pc     (ex_pc),
         .rs1    (ex_rs1),
-        .jal    (jal),
-        .jalr   (jalr),
-        .branch (branch)
+        .jal    (jal_c),
+        .jalr   (jalr_c),
+        .branch (branch_c)
         );
         
     mux_2t1_nb  #(.n(32)) alu_a_mux (
@@ -360,7 +437,7 @@ module OTTER_MCU(
         .func3    (ex_instr[14:12]),
         .rs1      (ex_rs1),
         .rs2      (ex_rs2),
-        .pcSource (pcSource)
+        .pcSource (pcSource_c)
         );
         
     CU_DCDR cu_dcdr (
@@ -380,14 +457,14 @@ module OTTER_MCU(
         );
         
     mux_2t1_nb  #(.n(32)) cu_dcdr_regwrite_mux (
-        .SEL   (stall | invalid_branch), 
+        .SEL   (stall | flush_id), 
         .D0    (regWrite), 
         .D1    (1'b0), 
         .D_OUT (id_regWrite)
         );  
     
     mux_2t1_nb  #(.n(32)) cu_dcdr_memwrite_mux (
-        .SEL   (stall | invalid_branch), 
+        .SEL   (stall | flush_id), 
         .D0    (memWE2), 
         .D1    (1'b0), 
         .D_OUT (id_memWE2)

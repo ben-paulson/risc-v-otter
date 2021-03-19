@@ -18,6 +18,8 @@ module preg_id_ex(
     input [31:0] j_type_in,
     input [31:0] b_type_in,
     input [31:0] i_type_in,
+    input [2:0] pcSrc_pred_in,
+    input [1:0] branch_pred_in,
     output reg [31:0] pc_out,
     output reg [31:0] instr_out,
     output reg regWrite_out,
@@ -33,7 +35,9 @@ module preg_id_ex(
     output reg [31:0] rs2_out,
     output reg [31:0] j_type_out,
     output reg [31:0] b_type_out,
-    output reg [31:0] i_type_out
+    output reg [31:0] i_type_out,
+    output reg [2:0] pcSrc_pred_out,
+    output reg [1:0] branch_pred_out
     );
     
     always @ (posedge clk) begin
@@ -53,6 +57,8 @@ module preg_id_ex(
         b_type_out = b_type_in;
         i_type_out = i_type_in;
         instr_out = instr_in;
+        pcSrc_pred_out = pcSrc_pred_in;
+        branch_pred_out = branch_pred_in;
     end
     
 endmodule
