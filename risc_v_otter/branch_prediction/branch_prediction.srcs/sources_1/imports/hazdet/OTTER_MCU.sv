@@ -110,6 +110,7 @@ module OTTER_MCU(
     // Branch Prediction wires
     wire bad_pred;
     wire [1:0] bpred;
+    wire [1:0] bpred_read;
     wire [1:0] nbpred;
     wire [1:0] ex_bpred;
     wire [31:0] jalr_p;
@@ -118,14 +119,14 @@ module OTTER_MCU(
     wire [31:0] jal_c;
     wire [31:0] branch_p;
     wire [31:0] branch_c;
-    wire [31:0] pcSource_p;
-    wire [31:0] pcSource_c;
-    wire [31:0] ex_pcSource_p;
+    wire [2:0] pcSource_p;
+    wire [2:0] pcSource_c;
+    wire [2:0] ex_pcSource_p;
         
     mux_2t1_nb  #(.n(32)) jalr_mux (
         .SEL   (bad_pred),
         .D0    (jalr_p), 
-        .D1    (jalr_c), 
+        .D1    (jalr_c),
         .D_OUT (jalr)
         );  
         
@@ -143,7 +144,7 @@ module OTTER_MCU(
         .D_OUT (jal)
         );  
         
-    mux_2t1_nb  #(.n(32)) pcSource_mux (
+    mux_2t1_nb  #(.n(3)) pcSource_mux (
         .SEL   (bad_pred), 
         .D0    (pcSource_p), 
         .D1    (pcSource_c), 
@@ -187,8 +188,15 @@ module OTTER_MCU(
         .wa         (ex_pc[11:2]),
         .newp       (nbpred),
         .instr      (pc_data[11:2]),
-        .prediction (bpred)
+        .prediction (bpred_read)
         );
+        
+    mux_2t1_nb  #(.n(2)) bpred_mux (
+        .SEL   (flush_id | invalid_branch_cc2),
+        .D0    (bpred_read),
+        .D1    (2'b00), // nop
+        .D_OUT (bpred)
+        );  
         
     mux_2t1_nb  #(.n(32)) id_invalid_branch_mux (
         .SEL   (flush_id | invalid_branch_cc2),

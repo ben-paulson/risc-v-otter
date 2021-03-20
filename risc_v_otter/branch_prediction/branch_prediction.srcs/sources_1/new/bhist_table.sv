@@ -11,6 +11,7 @@ module bhist_table(
     
     logic [1:0] bhist [0:1023];
     
+    // Initialize all branch history to 0
     integer i;
     initial begin
         for (i = 0; i < 1023; i++) begin
@@ -18,6 +19,7 @@ module bhist_table(
         end
     end
     
+    //
     always_ff @ (posedge clk) begin
         if (we) bhist[wa] = newp;
         prediction = bhist[instr];
